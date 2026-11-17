@@ -1,0 +1,36 @@
+<h1 class="text-2xl font-bold mb-4">Resumen del Almacén</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <p class="font-semibold">Materiales registrados</p>
+    <p class="text-4xl font-bold mt-2">120</p>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <p class="font-semibold">Almacenes</p>
+    <p class="text-4xl font-bold mt-2">3</p>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <p class="font-semibold">Avisos de stock bajo</p>
+    <p class="text-4xl font-bold mt-2">3 <span class="text-sm font-normal">materiales</span></p>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <p class="font-semibold">Movimientos este mes</p>
+    <p class="text-4xl font-bold mt-2">34</p>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow p-6">
+  <h2 class="text-xl font-bold mb-4">Últimos movimientos registrados</h2>
+
+  @for (m of movimientos; track m.numero) {
+    <div class="flex items-center justify-between border-b border-slate-300 py-3">
+      <div class="flex items-center gap-4">
+        <span [class]="'w-1.5 h-8 rounded ' + m.color"></span>
+        <span>{{ m.tipo }} N.º {{ m.numero }} · {{ m.fecha }} · {{ m.documento }}</span>
+      </div>
+      <button class="bg-slate-200 hover:bg-slate-300 text-sm rounded px-4 py-2">
+        Ver detalle
+      </button>
+    </div>
+  }
+</div>
