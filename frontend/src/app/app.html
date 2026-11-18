@@ -1,39 +1,50 @@
-<div class="flex h-screen bg-slate-100">
-
+<div class="flex h-screen bg-slate-300">
   <!-- Menú lateral -->
   <aside class="w-64 bg-[#16304f] text-white flex flex-col">
-    <div class="p-4 text-center text-lg border-b border-white/10">
-      Sistema almacén VCM
+    <div class="h-16 flex items-center justify-center gap-3 border-b border-white/10 px-4">
+      <svg lucideWarehouse [size]="32"></svg>
+      <span class="text-lg leading-tight">Sistema almacén VCM</span>
     </div>
 
     <nav class="p-3 space-y-1 text-sm overflow-y-auto">
-      <a routerLink="/inicio" routerLinkActive="bg-[#446c96]"
-   class="block rounded-lg px-4 py-3 hover:bg-white/10">INICIO</a>
-
-      <p class="pt-4 px-2 text-slate-300">Operaciones Almacén</p>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">ENTRADAS</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">SALIDAS</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">TRANSFERENCIAS</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">AJUSTE DE INVENTARIO</a>
-
-      <p class="pt-4 px-2 text-slate-300">Consulta y Administración</p>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">CONSULTAR STOCK</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">HISTORIAL DE OPERACIONES</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">REPORTES</a>
-      <a class="block rounded-lg px-4 py-2 hover:bg-white/10">AJUSTES</a>
+      @for (g of grupos; track g.titulo) {
+        @if (g.titulo) {
+          <p class="pt-4 pb-1 px-2 text-slate-300">{{ g.titulo }}</p>
+        }
+        @for (i of g.items; track i.texto) {
+          <a
+            [routerLink]="i.ruta"
+            routerLinkActive="bg-[#446c96]"
+            class="flex items-center gap-3 rounded-lg px-4 py-2.5 hover:bg-white/10"
+          >
+            <svg [lucideIcon]="i.icono" [size]="20"></svg>
+            <span>{{ i.texto }}</span>
+          </a>
+        }
+      }
     </nav>
   </aside>
 
   <!-- Cabecera + contenido -->
   <div class="flex-1 flex flex-col">
     <header class="h-16 bg-[#446c96] text-white flex items-center justify-end px-6">
-      <span class="text-sm">Rony Castro</span>
+      <div class="flex items-center gap-4">
+        <div class="text-right leading-tight">
+          <p class="font-medium">Rony Castro</p>
+          <p class="text-xs text-slate-200">Administrador</p>
+        </div>
+
+        <div class="h-8 w-px bg-white/80"></div>
+
+        <button class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/10">
+          <svg lucideLogOut [size]="22"></svg>
+          <span>Salir</span>
+        </button>
+      </div>
     </header>
 
     <main class="flex-1 p-6 overflow-y-auto">
       <router-outlet />
     </main>
   </div>
-
 </div>
-
