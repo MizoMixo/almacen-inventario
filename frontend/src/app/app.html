@@ -1,6 +1,14 @@
 <div class="flex h-screen bg-slate-300">
-  <!-- Menú lateral -->
-  <aside class="w-64 bg-[#16304f] text-white flex flex-col">
+  <!-- Fondo oscuro cuando el menú está abierto en pantallas pequeñas -->
+  @if (menuAbierto()) {
+    <div class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden" (click)="cerrarMenu()"></div>
+  }
+
+  <!-- Menú lateral: fijo en pantallas grandes, desplegable en pequeñas -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-[#16304f] text-white flex flex-col transition-transform duration-300 lg:static lg:translate-x-0"
+    [class]="menuAbierto() ? 'translate-x-0' : '-translate-x-full'"
+  >
     <div class="h-16 flex items-center justify-center gap-3 border-b border-white/10 px-4">
       <svg lucideWarehouse [size]="32"></svg>
       <span class="text-lg leading-tight">Sistema almacén VCM</span>
@@ -15,7 +23,8 @@
           <a
             [routerLink]="i.ruta"
             routerLinkActive="bg-[#446c96]"
-            class="flex items-center gap-3 rounded-lg px-4 py-2.5 hover:bg-white/10"
+            (click)="cerrarMenu()"
+            class="flex items-center gap-3 rounded-lg px-4 py-2.5 uppercase hover:bg-white/10"
           >
             <svg [lucideIcon]="i.icono" [size]="20"></svg>
             <span>{{ i.texto }}</span>
@@ -26,24 +35,48 @@
   </aside>
 
   <!-- Cabecera + contenido -->
-  <div class="flex-1 flex flex-col">
-    <header class="h-16 bg-[#446c96] text-white flex items-center justify-end px-6">
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header
+      class="h-16 shrink-0 bg-white border-b border-slate-300 px-4 sm:px-8 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <!-- Botón hamburguesa (solo en pantallas pequeñas) -->
+        <button
+          type="button"
+          (click)="alternarMenu()"
+          aria-label="Abrir menú"
+          class="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+        >
+          <svg lucideMenu [size]="24"></svg>
+        </button>
+
+        <!-- Breadcrumb -->
+        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+          <span>Panel principal</span>
+          <span>/</span>
+          <span class="font-medium text-slate-700">{{ paginaActual() }}</span>
+        </div>
+      </div>
+
       <div class="flex items-center gap-4">
         <div class="text-right leading-tight">
-          <p class="font-medium">Rony Castro</p>
-          <p class="text-xs text-slate-200">Administrador</p>
+          <p class="font-semibold text-slate-800">Rony Castro</p>
+          <p class="text-xs text-slate-500">Administrador</p>
         </div>
 
-        <div class="h-8 w-px bg-white/80"></div>
+        <div class="h-8 w-px bg-slate-300"></div>
 
-        <button class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-white/10">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50"
+        >
           <svg lucideLogOut [size]="22"></svg>
           <span>Salir</span>
         </button>
       </div>
     </header>
 
-    <main class="flex-1 p-6 overflow-y-auto">
+    <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
       <router-outlet />
     </main>
   </div>

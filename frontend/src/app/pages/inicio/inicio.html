@@ -1,6 +1,7 @@
 <h1 class="text-2xl font-bold mb-4">Resumen del Almacén</h1>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+<!-- Tarjetas de resumen -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
   <div class="bg-white rounded-2xl shadow-md p-4 text-center">
     <p class="font-semibold">Materiales registrados</p>
     <div class="flex items-center justify-center gap-4 mt-3">
@@ -17,35 +18,97 @@
     </div>
   </div>
 
-  <div class="bg-white rounded-2xl shadow-md p-4 text-center">
+  <!-- Clicable: lleva a Stock crítico -->
+  <button
+    type="button"
+    (click)="irAStockCritico(stockCriticoSeccion)"
+    class="bg-white rounded-2xl shadow-md p-4 text-center cursor-pointer transition hover:shadow-lg"
+  >
     <p class="font-semibold">Avisos de stock bajo</p>
     <div class="flex items-center justify-center gap-4 mt-3">
       <svg lucideTriangleAlert [size]="36" class="text-amber-500"></svg>
-      <span class="text-4xl font-bold">3 <span class="text-sm font-normal">materiales</span></span>
+      <span class="text-4xl font-bold">
+        {{ stockCritico.length }} <span class="text-sm font-normal">materiales</span>
+      </span>
     </div>
-  </div>
+  </button>
 
   <div class="bg-white rounded-2xl shadow-md p-4 text-center">
     <p class="font-semibold">Movimientos este mes</p>
     <div class="flex items-center justify-center gap-4 mt-3">
       <svg lucideArrowLeftRight [size]="36" class="text-cyan-500"></svg>
-      <span class="text-4xl font-bold">34</span>
+      <span class="text-4xl font-bold">{{ resumenMes.total }}</span>
     </div>
+    <p class="text-xs text-slate-500 mt-2">
+      {{ resumenMes.ingresos }} ingresos · {{ resumenMes.salidas }} salidas ·
+      {{ resumenMes.otros }} otros
+    </p>
   </div>
 </div>
 
-<div class="bg-white rounded-xl shadow p-6">
-  <h2 class="text-xl font-bold mb-4">Últimos movimientos registrados</h2>
-  <!-- #########################-->
-  <!-- ### DATOS FICTICIOS #↓↓↓#-->
-  @for (m of movimientos; track m.numero) {
-    <div class="flex items-center justify-between border-b border-slate-300 py-3">
-      <div class="flex items-center gap-4">
-        <span [class]="'w-1.5 h-8 rounded ' + m.color"></span>
-        <span>{{ m.tipo }} N.º {{ m.numero }} · {{ m.fecha }} · {{ m.documento }}</span>
-      </div>
-      <button class="bg-slate-200 hover:bg-slate-300 text-sm rounded px-4 py-2">Ver detalle</button>
+<!-- Dos columnas: movimientos (izquierda) y stock crítico (derecha) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+  <section class="lg:col-span-8 bg-white rounded-2xl shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold">Últimos movimientos registrados</h2>
+      <a routerLink="/historial" class="text-sm font-semibold text-blue-600 hover:underline">
+        Ver todo →
+      </a>
     </div>
-  }
-  <!-- #########################-->
+
+    @for (m of movimientos; track m.numero) {
+      <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0"
+      >
+        <div class="flex items-center gap-4">
+          <span [class]="'w-1.5 h-10 rounded shrink-0 ' + m.color"></span>
+          <div>
+            <p class="text-sm">
+              <span class="font-semibold">{{ m.tipo }} N.º {{ m.numero }}</span>
+              · {{ m.fecha }} · {{ m.documento }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500 flex items-center gap-2">
+              <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">{{
+                m.almacen
+              }}</span>
+              <span>•</span>
+              <span>{{ m.materiales }} {{ m.materiales === 1 ? 'material' : 'materiales' }}</span>
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-sm rounded px-4 py-2"
+        >
+          Ver detalle
+        </button>
+      </div>
+    }
+  </section>
+
+  <section
+    #stockCriticoSeccion
+    class="lg:col-span-4 bg-white rounded-2xl shadow-md p-6 transition"
+    [class]="resaltado() ? 'ring-2 ring-amber-400 ring-offset-2' : ''"
+  >
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+      <h2 class="text-xl font-bold">Stock crítico</h2>
+    </div>
+
+    @for (s of stockCritico; track s.nombre) {
+      <div class="border-b border-slate-200 py-3 last:border-0">
+        <p class="font-semibold text-sm">{{ s.nombre }}</p>
+        <p class="text-xs text-slate-500">{{ s.almacen }}</p>
+        <div class="mt-1 flex items-center gap-2 text-xs">
+          <span class="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+            {{ s.actual }} {{ s.unidad }}
+          </span>
+          <span class="text-slate-400">(Mín: {{ s.minimo }})</span>
+        </div>
+      </div>
+    } @empty {
+      <p class="text-sm text-slate-500">No hay materiales con stock bajo.</p>
+    }
+  </section>
 </div>
