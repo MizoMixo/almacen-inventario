@@ -50,11 +50,16 @@
           <svg lucideMenu [size]="24"></svg>
         </button>
 
-        <!-- Breadcrumb -->
         <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
           <span>Panel principal</span>
           <span>/</span>
-          <span class="font-medium text-slate-700">{{ paginaActual() }}</span>
+          @if (subpagina()) {
+            <a [routerLink]="seccion().ruta" class="hover:underline">{{ seccion().texto }}</a>
+            <span>/</span>
+            <span class="font-medium text-slate-700">{{ subpagina() }}</span>
+          } @else {
+            <span class="font-medium text-slate-700">{{ seccion().texto }}</span>
+          }
         </div>
       </div>
 

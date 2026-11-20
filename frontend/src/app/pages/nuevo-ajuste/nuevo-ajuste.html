@@ -1,0 +1,229 @@
+<div class="flex items-start justify-between gap-4 mb-4">
+  <div>
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl font-bold text-[#16304f]">
+        {{ esGeneral() ? 'Conteo general trimestral' : 'Nuevo ajuste puntual' }}
+      </h1>
+      <span class="text-xs font-semibold bg-purple-100 text-purple-700 rounded-full px-3 py-1">
+        {{ esGeneral() ? 'Conteo general' : 'Ajuste puntual' }}
+      </span>
+    </div>
+    <p class="text-sm text-slate-600">
+      Selecciona el almacén y busca los materiales cuyo stock físico difiere del sistema.
+    </p>
+  </div>
+  <span class="text-xs font-semibold bg-amber-100 text-amber-800 rounded-full px-3 py-1">Borrador</span>
+</div>
+
+<!-- Datos del ajuste -->
+<section class="bg-white rounded-2xl shadow-md p-6 mb-6">
+  <h2 class="text-lg font-bold text-[#16304f] mb-4">Datos del ajuste</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="block text-xs font-semibold mb-1">Fecha de ajuste *</label>
+      <input type="date" [(ngModel)]="fecha"
+             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Almacén a ajustar *</label>
+      <select [ngModel]="almacen()" (ngModelChange)="cambiarAlmacen($event)"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        <option value="">Seleccionar almacén</option>
+        @for (a of almacenes; track a) { <option [value]="a">{{ a }}</option> }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Tipo de ajuste *</label>
+      <select [ngModel]="tipo" (ngModelChange)="cambiarTipo($event)"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Documento / Acta de respaldo</label>
+      <input type="text" [(ngModel)]="documento" placeholder="Ej.: ACTA-INV-2026-Q4"
+             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </div>
+    <!--
+    <div>
+      <label class="block text-xs font-semibold mb-1">Registrado por *</label>
+      <select [(ngModel)]="usuario" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        <option value="">Seleccionar usuario</option>
+        @for (u of usuarios; track u) { <option [value]="u">{{ u }}</option> }
+      </select>
+    </div>
+    -->
+
+    <div class="md:col-span-3">
+      <label class="block text-xs font-semibold mb-1">Justificación / Observaciones de auditoría *</label>
+      <input type="text" [(ngModel)]="justificacion"
+             placeholder="Describe el motivo del ajuste (ej. Conteo físico trimestral Q4 supervisado en almacén)"
+             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </div>
+  </div>
+</section>
+
+<!-- Conteo físico y regularización -->
+<section class="bg-white rounded-2xl shadow-md p-6 mb-6">
+  <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+    <div>
+      <h2 class="text-lg font-bold text-[#16304f]">Conteo físico y regularización</h2>
+      <p class="text-sm text-slate-600">
+        @if (almacen()) {
+          Ingresa el stock físico contado en {{ almacen() }}. El sistema calculará la diferencia automáticamente.
+        } @else {
+          Selecciona primero el almacén para comenzar el conteo.
+        }
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      <input type="text" [value]="filtro()" #f (input)="filtro.set(f.value)" placeholder="Filtrar en lista..."
+             class="rounded-lg border border-slate-300 px-3 py-2 text-sm w-40">
+      <button type="button" (click)="cargarTodos()" [disabled]="!almacen()"
+              class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+        <svg lucideDownload [size]="16"></svg>
+        Cargar todos los materiales
+      </button>
+      <button type="button" (click)="abrirBuscador()" [disabled]="!almacen()"
+              class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-4 py-2.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+        <svg lucidePlus [size]="16"></svg>
+        Buscar material
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-100 text-xs uppercase text-slate-500">
+        <tr>
+          <th class="py-3 px-3 font-semibold">Código</th>
+          <th class="py-3 px-3 font-semibold">Material / unidad</th>
+          <th class="py-3 px-3 font-semibold text-right">Stock sistema</th>
+          <th class="py-3 px-3 font-semibold">Stock físico real</th>
+          <th class="py-3 px-3 font-semibold">Diferencia</th>
+          <th class="py-3 px-3 font-semibold">Nota por ítem</th>
+          <th class="py-3 px-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of lineasVisibles(); track l.material.codigo) {
+          @let d = diferencia(l);
+          <tr class="border-b border-slate-200">
+            <td class="py-2 px-3 font-mono text-xs text-emerald-700">{{ l.material.codigo }}</td>
+            <td class="py-2 px-3">
+              <p class="font-medium">{{ l.material.nombre }}</p>
+              <p class="text-xs text-slate-500">Unidad: {{ l.material.unidad }}</p>
+            </td>
+            <td class="py-2 px-3 text-right font-semibold">{{ l.sistema }} {{ l.material.unidad }}</td>
+            <td class="py-2 px-3">
+              <div class="flex items-center gap-2">
+                <input type="number" min="0" step="any" [(ngModel)]="l.fisico"
+                       class="w-24 rounded-lg border border-slate-300 px-2 py-1.5 text-sm font-semibold">
+                <span class="text-xs text-slate-500">{{ l.material.unidad }}</span>
+              </div>
+            </td>
+            <td class="py-2 px-3">
+              @if (d === null) {
+                <span class="text-slate-400">—</span>
+              } @else if (d > 0) {
+                <span class="text-xs font-semibold bg-green-100 text-green-700 rounded-full px-2.5 py-1">+{{ d }} {{ l.material.unidad }}</span>
+              } @else if (d < 0) {
+                <span class="text-xs font-semibold bg-red-100 text-red-700 rounded-full px-2.5 py-1">{{ d }} {{ l.material.unidad }}</span>
+              } @else {
+                <span class="text-xs font-semibold bg-slate-100 text-slate-600 rounded-full px-2.5 py-1">0 Sin cambio</span>
+              }
+            </td>
+            <td class="py-2 px-3">
+              <input type="text" [(ngModel)]="l.nota" placeholder="Obs. opcional..."
+                     class="w-full min-w-32 rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+            </td>
+            <td class="py-2 px-3 text-right">
+              <button type="button" (click)="quitar(l.material.codigo)" aria-label="Quitar material"
+                      class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50">
+                <svg lucideTrash2 [size]="18"></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="py-10 text-center text-slate-500">
+              <p>Aún no hay materiales cargados para conteo.</p>
+              <p class="text-xs">Usa «Buscar material» o «Cargar todos los materiales».</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @let r = resumen();
+  <div class="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs mt-4">
+    <p class="flex flex-wrap items-center gap-x-3 text-slate-500">
+      <span class="font-semibold text-slate-800">
+        {{ lineas().length }} {{ lineas().length === 1 ? 'línea' : 'líneas' }}
+      </span>
+      <span class="text-green-700">+{{ r.sobrantes }} sobrantes</span>
+      <span class="text-red-600">-{{ r.faltantes }} faltantes</span>
+      <span>{{ r.sinCambio }} sin cambio</span>
+    </p>
+    <span class="text-slate-500">
+      Al guardar, el stock del sistema quedará igual al valor físico ingresado.
+    </span>
+  </div>
+</section>
+
+<!-- Acciones -->
+<div class="flex flex-col items-end gap-2">
+  @if (error()) {
+    <p class="text-sm text-rose-600">{{ error() }}</p>
+  }
+  <div class="flex items-center gap-3">
+    <a routerLink="/ajuste-inventario" class="text-sm font-semibold text-slate-600 hover:underline">Cancelar</a>
+    <button type="button" (click)="guardar()"
+            class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow">
+      Aplicar y guardar ajuste
+    </button>
+  </div>
+</div>
+
+<!-- Ventana del buscador de materiales -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+       (click)="cerrarBuscador()">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-[#16304f]">Buscar material</h3>
+        <button type="button" (click)="cerrarBuscador()" aria-label="Cerrar"
+                class="p-1 rounded-lg text-slate-500 hover:bg-slate-100">
+          <svg lucideX [size]="20"></svg>
+        </button>
+      </div>
+
+      <div class="relative mb-3">
+        <svg lucideSearch [size]="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></svg>
+        <input #q type="text" [value]="busqueda()" (input)="busqueda.set(q.value)"
+               placeholder="Buscar por código o nombre"
+               class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm">
+      </div>
+
+      <div class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+        @for (m of resultados(); track m.codigo) {
+          <button type="button" (click)="agregar(m)"
+                  class="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50">
+            <span class="font-semibold">{{ m.nombre }}</span>
+            <span class="block text-xs text-slate-500">
+              {{ m.codigo }} · Stock sistema: {{ sistemaEn(m.codigo) }} {{ m.unidad }}
+            </span>
+          </button>
+        } @empty {
+          <p class="py-6 text-center text-sm text-slate-500">No se encontraron materiales.</p>
+        }
+      </div>
+    </div>
+  </div>
+}

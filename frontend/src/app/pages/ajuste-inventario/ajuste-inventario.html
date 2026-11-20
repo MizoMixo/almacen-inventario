@@ -1,0 +1,51 @@
+<h1 class="text-2xl font-bold text-[#16304f]">Ajuste de inventario</h1>
+<p class="text-sm text-slate-600">
+  Regulariza diferencias entre el stock físico y el sistema o ejecuta el conteo general trimestral.
+</p>
+
+<div class="flex flex-wrap gap-3 mt-4 mb-4">
+  <a routerLink="/ajuste-inventario/nuevo"
+     class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucidePlus [size]="16"></svg>
+    Nuevo ajuste puntual
+  </a>
+  <a routerLink="/ajuste-inventario/nuevo" [queryParams]="{ tipo: 'general' }"
+     class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucideClipboardList [size]="16"></svg>
+    Conteo general trimestral
+  </a>
+  <a routerLink="/stock"
+     class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucideBoxes [size]="16"></svg>
+    Ver saldos actuales
+  </a>
+</div>
+
+<section class="bg-white rounded-2xl shadow-md p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Últimos ajustes registrados</h2>
+    <span class="text-xs text-slate-500">Auditado por Jefatura de Administración</span>
+  </div>
+
+  @for (a of ajustes; track a.numero) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0">
+      <div class="flex items-center gap-4">
+        <span class="w-1.5 h-8 rounded bg-purple-500 shrink-0"></span>
+        <p class="text-sm flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="font-semibold">Ajuste N.º {{ a.numero }}</span>
+          <span>· {{ a.fecha }} · {{ a.almacen }}</span>
+          <span class="">·  {{ a.tipo }}</span>
+          <span class="text-xs text-slate-500">
+            ({{ a.materiales }} {{ a.materiales === 1 ? 'ítem' : 'ítems' }} · {{ a.documento }})
+          </span>
+        </p>
+      </div>
+      <button type="button"
+              class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2">
+        Ver detalle
+      </button>
+    </div>
+  } @empty {
+    <p class="text-sm text-slate-500">Todavía no hay ajustes registrados.</p>
+  }
+</section>

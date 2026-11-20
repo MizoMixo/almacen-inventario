@@ -1,0 +1,189 @@
+<div class="flex items-start justify-between gap-4 mb-4">
+  <div>
+    <h1 class="text-2xl font-bold text-[#16304f]">Nueva transferencia</h1>
+    <p class="text-sm text-slate-600">Selecciona los almacenes de origen y destino y agrega los materiales a trasladar.</p>
+  </div>
+  <span class="text-xs font-semibold bg-amber-100 text-amber-800 rounded-full px-3 py-1">Borrador</span>
+</div>
+
+<!-- Datos de la transferencia -->
+<section class="bg-white rounded-2xl shadow-md p-6 mb-6">
+  <h2 class="text-lg font-bold text-[#16304f] mb-4">Datos de la transferencia</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="block text-xs font-semibold mb-1">Fecha de transferencia *</label>
+      <input type="date" [(ngModel)]="fecha"
+             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Almacén de origen *</label>
+      <select [ngModel]="origen()" (ngModelChange)="cambiarOrigen($event)"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        <option value="">Seleccionar almacén origen</option>
+        @for (a of almacenes; track a) { <option [value]="a">{{ a }}</option> }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Almacén de destino *</label>
+      <select [(ngModel)]="destino" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        <option value="">Seleccionar almacén destino</option>
+        @for (a of almacenes; track a) {
+          <option [value]="a" [disabled]="a === origen()">{{ a }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Motivo de traslado *</label>
+      <select [(ngModel)]="motivo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        @for (m of motivos; track m) { <option [value]="m">{{ m }}</option> }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">Documento de respaldo</label>
+      <select [(ngModel)]="tipoDocumento" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        @for (t of tiposDocumento; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold mb-1">N.º de documento</label>
+      <input type="text" [(ngModel)]="numeroDocumento" placeholder="Ej.: GRI-0042"
+             [disabled]="tipoDocumento === 'Sin documento'"
+             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100 disabled:cursor-not-allowed">
+    </div>
+    <!--
+    <div>
+      <label class="block text-xs font-semibold mb-1">Registrado por *</label>
+      <select [(ngModel)]="usuario" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+        <option value="">Seleccionar usuario</option>
+        @for (u of usuarios; track u) { <option [value]="u">{{ u }}</option> }
+      </select>
+    </div>
+    -->
+
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold mb-1">Observaciones</label>
+      <textarea [(ngModel)]="observaciones" rows="3"
+                placeholder="Información adicional del traslado, responsable o transporte (opcional)"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+    </div>
+  </div>
+</section>
+
+<!-- Materiales a transferir -->
+<section class="bg-white rounded-2xl shadow-md p-6 mb-6">
+  <div class="flex items-start justify-between gap-4 mb-4">
+    <div>
+      <h2 class="text-lg font-bold text-[#16304f]">Materiales a transferir</h2>
+      <p class="text-sm text-slate-600">
+        Selecciona primero el almacén de origen para habilitar la búsqueda de materiales disponibles.
+      </p>
+    </div>
+    <button type="button" (click)="abrirBuscador()" [disabled]="!origen()"
+            class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-4 py-2.5 shrink-0 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+      <svg lucidePlus [size]="16"></svg>
+      Buscar material
+    </button>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-100 text-xs uppercase text-slate-500">
+        <tr>
+          <th class="py-3 px-3 font-semibold">Código</th>
+          <th class="py-3 px-3 font-semibold">Material / unidad</th>
+          <th class="py-3 px-3 font-semibold">Stock en origen</th>
+          <th class="py-3 px-3 font-semibold">Cantidad a transferir</th>
+          <th class="py-3 px-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of lineas(); track l.material.codigo; let i = $index) {
+          <tr class="border-b border-slate-200">
+            <td class="py-2 px-3">{{ l.material.codigo }}</td>
+            <td class="py-2 px-3">{{ l.material.nombre }} <span class="text-slate-500">({{ l.material.unidad }})</span></td>
+            <td class="py-2 px-3 font-semibold">{{ l.stock }} {{ l.material.unidad }}</td>
+            <td class="py-2 px-3 w-40">
+              <input type="number" min="0" [max]="l.stock" step="any" [(ngModel)]="l.cantidad"
+                     class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+            </td>
+            <td class="py-2 px-3 text-right">
+              <button type="button" (click)="quitar(i)" aria-label="Quitar material"
+                      class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50">
+                <svg lucideTrash2 [size]="18"></svg>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="py-10 text-center text-slate-500">
+              <p>Aún no hay materiales.</p>
+              <p class="text-xs">Agrega el primero desde «Buscar material».</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-between text-xs text-slate-500 mt-4">
+    <span>{{ lineas().length }} {{ lineas().length === 1 ? 'línea' : 'líneas' }}</span>
+    <span>Las filas se crean únicamente desde el buscador según stock en origen.</span>
+  </div>
+</section>
+
+<!-- Acciones -->
+<div class="flex flex-col items-end gap-2">
+  @if (error()) {
+    <p class="text-sm text-rose-600">{{ error() }}</p>
+  }
+  <div class="flex items-center gap-3">
+    <a routerLink="/transferencias" class="text-sm font-semibold text-slate-600 hover:underline">Cancelar</a>
+    <button type="button" (click)="guardar()"
+            class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow">
+      Guardar transferencia
+    </button>
+  </div>
+</div>
+
+<!-- Ventana del buscador de materiales -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+       (click)="cerrarBuscador()">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-[#16304f]">Buscar material en {{ origen() }}</h3>
+        <button type="button" (click)="cerrarBuscador()" aria-label="Cerrar"
+                class="p-1 rounded-lg text-slate-500 hover:bg-slate-100">
+          <svg lucideX [size]="20"></svg>
+        </button>
+      </div>
+
+      <div class="relative mb-3">
+        <svg lucideSearch [size]="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></svg>
+        <input #q type="text" [value]="busqueda()" (input)="busqueda.set(q.value)"
+               placeholder="Buscar por código o nombre"
+               class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm">
+      </div>
+
+      <div class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+        @for (m of resultados(); track m.codigo) {
+          <button type="button" (click)="agregar(m)"
+                  class="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50">
+            <span class="font-semibold">{{ m.nombre }}</span>
+            <span class="block text-xs text-slate-500">
+              {{ m.codigo }} · Stock: {{ stockEn(m.codigo) }} {{ m.unidad }}
+            </span>
+          </button>
+        } @empty {
+          <p class="py-6 text-center text-sm text-slate-500">No hay materiales disponibles.</p>
+        }
+      </div>
+    </div>
+  </div>
+}

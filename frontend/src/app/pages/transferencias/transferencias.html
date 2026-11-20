@@ -1,0 +1,40 @@
+<h1 class="text-2xl font-bold text-[#16304f]">Registrar transferencias</h1>
+<p class="text-sm text-slate-600">Gestiona el traslado de materiales entre los almacenes de la empresa.</p>
+
+<div class="flex flex-wrap gap-3 mt-4 mb-4">
+  <a routerLink="/transferencias/nueva"
+     class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucideArrowLeftRight [size]="16"></svg>
+    Nueva transferencia
+  </a>
+  <a routerLink="/stock"
+     class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucideBoxes [size]="16"></svg>
+    Ver stock por almacén
+  </a>
+</div>
+
+<section class="bg-white rounded-2xl shadow-md p-6">
+  <h2 class="text-xl font-bold mb-4">Últimas transferencias</h2>
+
+  @for (t of transferencias; track t.numero) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0">
+      <div class="flex items-center gap-4">
+        <span class="w-1.5 h-8 rounded bg-yellow-400 shrink-0"></span>
+        <p class="text-sm">
+          <span class="font-semibold">Transferencia N.º {{ t.numero }}</span>
+          · {{ t.fecha }} · {{ t.origen }} → {{ t.destino }}
+          <span class="text-xs text-slate-500">
+            ({{ t.materiales }} {{ t.materiales === 1 ? 'ítem' : 'ítems' }}{{ t.documento ? ' · ' + t.documento : '' }})
+          </span>
+        </p>
+      </div>
+      <button type="button"
+              class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2">
+        Ver detalle
+      </button>
+    </div>
+  } @empty {
+    <p class="text-sm text-slate-500">Todavía no hay transferencias registradas.</p>
+  }
+</section>

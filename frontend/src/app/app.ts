@@ -88,9 +88,16 @@ export class App {
     { initialValue: this.router.url },
   );
 
-  paginaActual = computed(() => {
-    const url = this.url();
-    const todos = this.grupos.flatMap((g) => g.items);
-    return todos.find((i) => url.startsWith(i.ruta))?.texto ?? 'Inicio';
-  });
+  private todos = this.grupos.flatMap(g => g.items);
+
+  // Sección actual del menú (para el breadcrumb)
+  seccion = computed(() => this.todos.find(i => this.url().startsWith(i.ruta)) ?? this.todos[0]);
+
+  private subpaginas: Record<string, string> = {
+    '/entradas/nuevo': 'Nuevo ingreso',
+    '/salidas/nueva': 'Nueva salida',
+    '/transferencias/nueva': 'Nueva transferencia',
+    '/ajuste-inventario/nuevo': 'Nuevo ajuste',
+  };
+  subpagina = computed(() => this.subpaginas[this.url().split('?')[0]] ?? '');
 }

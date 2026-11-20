@@ -1,0 +1,33 @@
+<h1 class="text-2xl font-bold text-[#16304f]">Registrar salidas</h1>
+<p class="text-sm text-slate-600">Comienza una nueva entrega de materiales.</p>
+
+<a routerLink="/salidas/nueva"
+   class="inline-flex items-center gap-2 mt-4 mb-4 bg-[#446c96] hover:bg-[#3a5f86] text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
+    <svg lucidePlus [size]="16"> </svg>
+    Registrar salida
+</a>
+
+<section class="bg-white rounded-2xl shadow-md p-6">
+  <h2 class="text-xl font-bold mb-4">Últimas salidas</h2>
+
+  @for (s of salidas; track s.numero) {
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0">
+      <div class="flex items-center gap-4">
+        <span class="w-1.5 h-8 rounded bg-red-500 shrink-0"></span>
+        <p class="text-sm">
+          <span class="font-semibold">Salida N.º {{ s.numero }}</span>
+          · {{ s.fecha }} · {{ s.almacen }}
+          <span class="text-xs text-slate-500">
+            ({{ s.materiales }} {{ s.materiales === 1 ? 'ítem' : 'ítems' }}{{ s.documento ? ' · ' + s.documento : '' }})
+          </span>
+        </p>
+      </div>
+      <button type="button"
+              class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2">
+        Ver detalle
+      </button>
+    </div>
+  } @empty {
+    <p class="text-sm text-slate-500">Todavía no hay salidas registradas.</p>
+  }
+</section>
