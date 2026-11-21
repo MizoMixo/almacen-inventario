@@ -2,6 +2,11 @@ import { Component, computed, inject, signal  } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
+import { Sesion } from '../../sesion';
+import {
+  claseCampo, claseCampoTabla, errorFecha, errorNumero, hoyISO,
+  irAId, irAlPrimerError, limpiarNumero,
+} from '../../shared/validaciones';
 
 interface Material { codigo: string; nombre: string; unidad: string; }
 interface Linea { material: Material; stock: number; cantidad: number | null; }
@@ -14,13 +19,12 @@ interface Linea { material: Material; stock: number; cantidad: number | null; }
   styleUrl: './nueva-transferencia.css',
 })
 export class NuevaTransferencia {
-  private router = inject(Router);
+  private sesion = inject(Sesion);
 
   // Catálogos de ejemplo (luego vendrán de la base de datos)
   almacenes = ['Almacén Central', 'Almacén Campo', 'Almacén Vichama'];
   motivos = ['Abastecimiento de obra / sede', 'Reubicación', 'Devolución a almacén central'];
-  tiposDocumento = ['Sin documento', 'Guía de remisión', 'Guía interna', 'Acta de entrega'];
-  usuarios = ['Rony Castro', 'Ana Torres'];
+  tiposDocumento = ['Guía de remisión', 'Guía interna', 'Acta de entrega'];
   materiales: Material[] = [
     { codigo: 'MAT-001', nombre: 'Cemento Portland Tipo I', unidad: 'bls' },
     { codigo: 'MAT-002', nombre: 'Brocha de cerda 2"', unidad: 'und' },
@@ -36,75 +40,108 @@ export class NuevaTransferencia {
     'Almacén Vichama': { 'MAT-003': 25, 'MAT-004': 6 },
   };
 
-  // Datos de la transferencia
-  fecha = new Date().toLocaleDateString('en-CA');
+  // Datos de la transferencia (la fecha empieza vacía)
+  fecha = '';
   destino = '';
   motivo = this.motivos[0];
-  tipoDocumento = 'Sin documento';
+  tipoDocumento = '';
   numeroDocumento = '';
-  usuario = '';
   observaciones = '';
 
-  // El origen es una señal porque al cambiarlo se actualizan los materiales disponibles
   origen = signal('');
   lineas = signal<Linea[]>([]);
   modalAbierto = signal(false);
   busqueda = signal('');
+
+  intentado = signal(false);
   error = signal('');
+  guardado = signal(false);
+  numeroGuardado = signal(0);
+  private contador = 35; // número provisional; el real lo asignará el backend
+
+  clase = claseCampo;
+  claseLinea = claseCampoTabla;
+  get hoy() { return hoyISO(); }
 
   cambiarOrigen(valor: string) {
     this.origen.set(valor);
+    if (this.destino === valor) this.destino = ''; // no puede ser el mismo almacén
     this.lineas.set([]); // el stock cambia, así que se vacía la tabla
   }
 
-  // Solo materiales con stock en el origen y que aún no se agregaron
-  resultados = computed(() => {
-    const texto = this.busqueda().toLowerCase().trim();
-    const usados = this.lineas().map(l => l.material.codigo);
-    const stockOrigen = this.stock[this.origen()] ?? {};
-    return this.materiales.filter(m =>
-      (stockOrigen[m.codigo] ?? 0) > 0 &&
-      !usados.includes(m.codigo) &&
-      (m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto)),
-    );
-  });
+  // ---------- Validaciones ----------
+  vOrigen() { return this.origen() ? '' : 'Selecciona el almacén de origen.'; }
+  vDestino() {
+    if (!this.destino) return 'Selecciona el almacén de destino.';
+    if (this.destino === this.origen()) return 'Debe ser distinto al de origen.';
+    return '';
+  }
+  vMotivo() { return this.motivo ? '' : 'Selecciona un motivo.'; }
+  vTipoDocumento() { return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.'; }
+  vCantidad(l: Linea) {
+    if (l.cantidad === null || l.cantidad <= 0) return 'Mayor que cero';
+    if (l.cantidad > l.stock) return 'Máx. ' + l.stock;
+    return '';
+  }
 
+  e(mensaje: string) { return this.intentado() ? mensaje : ''; }
+
+  errores() {
+    return {
+      fecha: this.e(errorFecha(this.fecha)),
+      origen: this.e(this.vOrigen()),
+      destino: this.e(this.vDestino()),
+      motivo: this.e(this.vMotivo()),
+      tipoDocumento: this.e(this.vTipoDocumento()),
+      numero: this.e(errorNumero(this.numeroDocumento)),
+      lineas: this.e(this.lineas().length === 0 ? 'Agrega al menos un material.' : ''),
+    };
+  }
+
+  private formularioValido(): boolean {
+    const lineas = this.lineas();
+    return !errorFecha(this.fecha) && !this.vOrigen() && !this.vDestino() && !this.vMotivo()
+      && !this.vTipoDocumento() && !errorNumero(this.numeroDocumento)
+      && lineas.length > 0
+      && lineas.every(l => !this.vCantidad(l));
+  }
+
+  alEscribirNumero(ev: Event) { this.numeroDocumento = limpiarNumero(ev); }
+
+  // ---------- Buscador de materiales ----------
   stockEn(codigo: string): number {
     return this.stock[this.origen()]?.[codigo] ?? 0;
   }
 
+  // Solo materiales con stock en el origen
+  resultados = computed(() => {
+    const texto = this.busqueda().toLowerCase().trim();
+    const stockOrigen = this.stock[this.origen()] ?? {};
+    return this.materiales.filter(m =>
+      (stockOrigen[m.codigo] ?? 0) > 0 &&
+      (m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto)),
+    );
+  });
+
+  yaAgregado(m: Material) { return this.lineas().some(l => l.material.codigo === m.codigo); }
   abrirBuscador() { this.busqueda.set(''); this.modalAbierto.set(true); }
   cerrarBuscador() { this.modalAbierto.set(false); }
 
-  agregar(material: Material) {
-    this.lineas.update(l => [...l, { material, stock: this.stockEn(material.codigo), cantidad: null }]);
-    this.cerrarBuscador();
+  agregar(m: Material) {
+    if (this.yaAgregado(m)) return;
+    this.lineas.update(l => [...l, { material: m, stock: this.stockEn(m.codigo), cantidad: null }]);
   }
 
-  quitar(index: number) {
-    this.lineas.update(l => l.filter((_, i) => i !== index));
-  }
+  quitar(index: number) { this.lineas.update(l => l.filter((_, i) => i !== index)); }
 
+  // ---------- Guardar ----------
   guardar() {
-    if (!this.fecha || !this.origen() || !this.destino || !this.motivo || !this.usuario) {
-      this.error.set('Completa los campos obligatorios (*).');
-      return;
-    }
-    if (this.origen() === this.destino) {
-      this.error.set('El almacén de origen y el de destino deben ser distintos.');
-      return;
-    }
-    const lineas = this.lineas();
-    if (lineas.length === 0) {
-      this.error.set('Agrega al menos un material.');
-      return;
-    }
-    if (lineas.some(l => !l.cantidad || l.cantidad <= 0)) {
-      this.error.set('La cantidad de cada material debe ser mayor que cero.');
-      return;
-    }
-    if (lineas.some(l => l.cantidad! > l.stock)) {
-      this.error.set('Una cantidad supera el stock disponible en el almacén de origen.');
+    if (this.guardado()) return;
+    this.intentado.set(true);
+
+    if (!this.formularioValido()) {
+      this.error.set('Revisa los campos marcados en rojo.');
+      irAlPrimerError();
       return;
     }
     this.error.set('');
@@ -113,8 +150,23 @@ export class NuevaTransferencia {
     console.log('Transferencia lista para guardar:', {
       fecha: this.fecha, origen: this.origen(), destino: this.destino, motivo: this.motivo,
       tipoDocumento: this.tipoDocumento, numeroDocumento: this.numeroDocumento,
-      usuario: this.usuario, observaciones: this.observaciones, lineas,
+      observaciones: this.observaciones, usuario: this.sesion.nombre, lineas: this.lineas(),
     });
-    this.router.navigate(['/transferencias']);
+
+    this.numeroGuardado.set(this.contador++);
+    this.guardado.set(true);
+    irAId('mensaje-guardado');
+  }
+
+  nuevaTransferencia() {
+    this.fecha = ''; this.destino = ''; this.motivo = this.motivos[0]; this.tipoDocumento = '';
+    this.numeroDocumento = ''; this.observaciones = '';
+    this.origen.set('');
+    this.lineas.set([]);
+    this.busqueda.set('');
+    this.intentado.set(false);
+    this.error.set('');
+    this.guardado.set(false);
+    irAId('titulo-transferencia', 'start');
   }
 }

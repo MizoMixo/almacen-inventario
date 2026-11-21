@@ -1,2 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+/* Modo solo lectura: los cuadros del formulario se ven bloqueados */
+fieldset:disabled input,
+fieldset:disabled select,
+fieldset:disabled textarea {
+  background-color: #f8fafc;
+  color: #334155;
+  -webkit-text-fill-color: #334155;
+  opacity: 1;
+  cursor: not-allowed;
+}

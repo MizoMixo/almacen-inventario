@@ -17,6 +17,7 @@ import {
   LucideFileText,
   LucideSettings,
 } from '@lucide/angular';
+import { Sesion } from './sesion';
 
 // INTERFACES PARA EL MENU LATERAL
 interface ItemMenu {
@@ -46,6 +47,7 @@ interface GrupoMenu {
 })
 export class App {
   private router = inject(Router);
+  sesion = inject(Sesion);
 
   // Menú desplegable en pantallas pequeñas
   menuAbierto = signal(false);
