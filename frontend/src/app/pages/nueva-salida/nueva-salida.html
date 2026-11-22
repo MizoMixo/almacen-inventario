@@ -6,84 +6,133 @@
     <p class="text-sm text-slate-600">Completa los datos y agrega los materiales entregados.</p>
 
     @if (guardado()) {
-      <div id="mensaje-guardado"
-           class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-medium px-3 py-2">
+      <div
+        id="mensaje-guardado"
+        class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-medium px-3 py-2"
+      >
         Salida N.º {{ numeroGuardado() }} guardada. No se puede editar ni guardar por segunda vez.
       </div>
     }
   </div>
 
-  <span [class]="'text-xs font-semibold rounded-full px-3 py-1 shrink-0 ' + (guardado() ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800')">
+  <span
+    [class]="
+      'text-xs font-semibold rounded-full px-3 py-1 shrink-0 ' +
+      (guardado() ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800')
+    "
+  >
     {{ guardado() ? 'Guardada · Solo lectura' : 'Borrador' }}
   </span>
 </div>
 
 <fieldset [disabled]="guardado()" class="min-w-0">
-
   <!-- Datos de la salida -->
   <section class="bg-white rounded-2xl shadow-md p-6 mb-6">
     <h2 class="text-lg font-bold text-[#16304f] mb-4">Datos de la salida</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <div class="md:col-span-2">
         <label class="block text-xs font-semibold mb-1">Fecha de salida *</label>
-        <input type="date" [(ngModel)]="fecha" [max]="hoy" [class]="clase(er.fecha)">
-        @if (er.fecha) { <p class="mt-1 text-xs text-red-600">{{ er.fecha }}</p> }
+        <input type="date" [(ngModel)]="fecha" [max]="hoy" [class]="clase(er.fecha)" />
+        @if (er.fecha) {
+          <p class="mt-1 text-xs text-red-600">{{ er.fecha }}</p>
+        }
       </div>
 
-      <div>
+      <div class="md:col-span-3">
         <label class="block text-xs font-semibold mb-1">Motivo de salida *</label>
         <select [(ngModel)]="motivo" [class]="clase(er.motivo)">
           <option value="">Seleccionar motivo</option>
-          @for (m of motivos; track m) { <option [value]="m">{{ m }}</option> }
+          @for (m of motivos; track m) {
+            <option [value]="m">{{ m }}</option>
+          }
         </select>
-        @if (er.motivo) { <p class="mt-1 text-xs text-red-600">{{ er.motivo }}</p> }
+        @if (er.motivo) {
+          <p class="mt-1 text-xs text-red-600">{{ er.motivo }}</p>
+        }
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label class="block text-xs font-semibold mb-1">Tipo de documento *</label>
         <select [(ngModel)]="tipoDocumento" [class]="clase(er.tipoDocumento)">
           <option value="">Seleccionar tipo</option>
-          @for (t of tiposDocumento; track t) { <option [value]="t">{{ t }}</option> }
+          @for (t of tiposDocumento; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
         </select>
-        @if (er.tipoDocumento) { <p class="mt-1 text-xs text-red-600">{{ er.tipoDocumento }}</p> }
+        @if (er.tipoDocumento) {
+          <p class="mt-1 text-xs text-red-600">{{ er.tipoDocumento }}</p>
+        }
       </div>
 
-      <div>
-        <label class="block text-xs font-semibold mb-1">Serie</label>
-        <input type="text" [value]="serie" (input)="alEscribirSerie($event)" maxlength="10"
-               placeholder="Ej.: F001" autocomplete="off" [class]="clase(er.serie)">
-        @if (er.serie) { <p class="mt-1 text-xs text-red-600">{{ er.serie }}</p> }
-      </div>
-
-      <div>
+      <div class="md:col-span-2">
         <label class="block text-xs font-semibold mb-1">Número de documento *</label>
-        <input type="text" inputmode="numeric" [value]="numeroDocumento" (input)="alEscribirNumero($event)"
-               maxlength="10" placeholder="Ej.: 000125" autocomplete="off" [class]="clase(er.numero)">
-        @if (er.numero) { <p class="mt-1 text-xs text-red-600">{{ er.numero }}</p> }
+        <input
+          type="text"
+          inputmode="numeric"
+          [value]="numeroDocumento"
+          (input)="alEscribirNumero($event)"
+          maxlength="10"
+          placeholder="Ej.: 000125"
+          autocomplete="off"
+          [class]="clase(er.numero)"
+        />
+        @if (er.numero) {
+          <p class="mt-1 text-xs text-red-600">{{ er.numero }}</p>
+        }
       </div>
 
-      <div>
+      <div class="md:col-span-2">
+        <label class="block text-xs font-semibold mb-1">Serie</label>
+        <input
+          type="text"
+          [value]="serie"
+          (input)="alEscribirSerie($event)"
+          maxlength="10"
+          placeholder="Ej.: F001"
+          autocomplete="off"
+          [class]="clase(er.serie)"
+        />
+        @if (er.serie) {
+          <p class="mt-1 text-xs text-red-600">{{ er.serie }}</p>
+        }
+      </div>
+
+      <div class="md:col-span-2">
         <label class="block text-xs font-semibold mb-1">Área solicitante</label>
-        <select [(ngModel)]="area" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+        <select
+          [(ngModel)]="area"
+          class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
           <option value="">Seleccionar área (opcional)</option>
-          @for (a of areas; track a) { <option [value]="a">{{ a }}</option> }
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold mb-1">Receptor</label>
-        <select [(ngModel)]="receptor" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
-          <option value="">Seleccionar receptor (opcional)</option>
-          @for (r of receptores; track r) { <option [value]="r">{{ r }}</option> }
+          @for (a of areas; track a) {
+            <option [value]="a">{{ a }}</option>
+          }
         </select>
       </div>
 
       <div class="md:col-span-2">
+        <label class="block text-xs font-semibold mb-1">Receptor</label>
+        <select
+          [(ngModel)]="receptor"
+          class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">Seleccionar receptor (opcional)</option>
+          @for (r of receptores; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="md:col-span-4">
         <label class="block text-xs font-semibold mb-1">Observaciones</label>
-        <textarea [(ngModel)]="observaciones" rows="3" maxlength="300"
-                  placeholder="Información adicional (opcional)"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></textarea>
+        <textarea
+          [(ngModel)]="observaciones"
+          rows="3"
+          maxlength="300"
+          placeholder="Información adicional (opcional)"
+          class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+        ></textarea>
       </div>
     </div>
   </section>
@@ -95,8 +144,12 @@
         <h2 class="text-lg font-bold text-[#16304f]">Materiales entregados</h2>
         <p class="text-sm text-slate-600">Busca un material y completa su almacén y cantidad.</p>
       </div>
-      <button type="button" (click)="abrirBuscador()" [disabled]="guardado()"
-              class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-4 py-2.5 shrink-0 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+      <button
+        type="button"
+        (click)="abrirBuscador()"
+        [disabled]="guardado()"
+        class="flex items-center gap-2 bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-4 py-2.5 shrink-0 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+      >
         <svg lucidePlus [size]="16"></svg>
         Buscar material
       </button>
@@ -119,22 +172,41 @@
             @let eCant = e(vCantidad(l));
             <tr class="border-b border-slate-200">
               <td class="py-2 px-3">{{ l.material.codigo }}</td>
-              <td class="py-2 px-3">{{ l.material.nombre }} <span class="text-slate-500">({{ l.material.unidad }})</span></td>
+              <td class="py-2 px-3">
+                {{ l.material.nombre }}
+                <span class="text-slate-500">({{ l.material.unidad }})</span>
+              </td>
               <td class="py-2 px-3">
                 <select [(ngModel)]="l.almacen" [class]="claseLinea(eAlm)">
                   <option value="">Seleccionar</option>
-                  @for (a of almacenes; track a) { <option [value]="a">{{ a }}</option> }
+                  @for (a of almacenes; track a) {
+                    <option [value]="a">{{ a }}</option>
+                  }
                 </select>
-                @if (eAlm) { <p class="mt-1 text-xs text-red-600">{{ eAlm }}</p> }
+                @if (eAlm) {
+                  <p class="mt-1 text-xs text-red-600">{{ eAlm }}</p>
+                }
               </td>
               <td class="py-2 px-3 w-36">
-                <input type="number" min="0" step="any" [(ngModel)]="l.cantidad" [class]="claseLinea(eCant)">
-                @if (eCant) { <p class="mt-1 text-xs text-red-600">{{ eCant }}</p> }
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  [(ngModel)]="l.cantidad"
+                  [class]="claseLinea(eCant)"
+                />
+                @if (eCant) {
+                  <p class="mt-1 text-xs text-red-600">{{ eCant }}</p>
+                }
               </td>
               <td class="py-2 px-3 text-right">
                 @if (!guardado()) {
-                  <button type="button" (click)="quitar(i)" aria-label="Quitar material"
-                          class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50">
+                  <button
+                    type="button"
+                    (click)="quitar(i)"
+                    aria-label="Quitar material"
+                    class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                  >
                     <svg lucideTrash2 [size]="18"></svg>
                   </button>
                 }
@@ -161,25 +233,36 @@
       <span>Las filas se crean únicamente desde el buscador.</span>
     </div>
   </section>
-
 </fieldset>
 
 <!-- Acciones -->
 <div class="flex flex-col items-end gap-2">
   @if (!guardado()) {
-    @if (error()) { <p class="text-sm text-rose-600">{{ error() }}</p> }
+    @if (error()) {
+      <p class="text-sm text-rose-600">{{ error() }}</p>
+    }
     <div class="flex items-center gap-3">
-      <a routerLink="/salidas" class="text-sm font-semibold text-slate-600 hover:underline">Cancelar</a>
-      <button type="button" (click)="guardar()"
-              class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow">
+      <a routerLink="/salidas" class="text-sm font-semibold text-slate-600 hover:underline"
+        >Cancelar</a
+      >
+      <button
+        type="button"
+        (click)="guardar()"
+        class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow"
+      >
         Guardar salida
       </button>
     </div>
   } @else {
     <div class="flex items-center gap-3">
-      <a routerLink="/salidas" class="text-sm font-semibold text-slate-600 hover:underline">Volver a salidas</a>
-      <button type="button" (click)="nuevaSalida()"
-              class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow">
+      <a routerLink="/salidas" class="text-sm font-semibold text-slate-600 hover:underline"
+        >Volver a salidas</a
+      >
+      <button
+        type="button"
+        (click)="nuevaSalida()"
+        class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow"
+      >
         Nueva salida
       </button>
     </div>
@@ -188,22 +271,40 @@
 
 <!-- Ventana del buscador de materiales -->
 @if (modalAbierto()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-       (click)="cerrarBuscador()">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6" (click)="$event.stopPropagation()">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+    (click)="cerrarBuscador()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6"
+      (click)="$event.stopPropagation()"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-[#16304f]">Buscar material</h3>
-        <button type="button" (click)="cerrarBuscador()" aria-label="Cerrar"
-                class="p-1 rounded-lg text-slate-500 hover:bg-slate-100">
+        <button
+          type="button"
+          (click)="cerrarBuscador()"
+          aria-label="Cerrar"
+          class="p-1 rounded-lg text-slate-500 hover:bg-slate-100"
+        >
           <svg lucideX [size]="20"></svg>
         </button>
       </div>
 
       <div class="relative mb-3">
-        <svg lucideSearch [size]="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></svg>
-        <input #q type="text" [value]="busqueda()" (input)="busqueda.set(q.value)"
-               placeholder="Buscar por código o nombre"
-               class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm">
+        <svg
+          lucideSearch
+          [size]="16"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        ></svg>
+        <input
+          #q
+          type="text"
+          [value]="busqueda()"
+          (input)="busqueda.set(q.value)"
+          placeholder="Buscar por código o nombre"
+          class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm"
+        />
       </div>
 
       <div class="max-h-72 overflow-y-auto">
@@ -223,14 +324,27 @@
                   <span class="block text-xs text-slate-500">{{ m.codigo }} · {{ m.unidad }}</span>
                 </td>
                 <td class="py-2.5 px-2 text-right">
-                  <button type="button" (click)="agregar(m)" [disabled]="usado"
-                          [class]="'text-xs font-semibold rounded-lg px-3 py-1.5 ' + (usado ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-[#446c96] hover:bg-[#3a5f86] text-white')">
+                  <button
+                    type="button"
+                    (click)="agregar(m)"
+                    [disabled]="usado"
+                    [class]="
+                      'text-xs font-semibold rounded-lg px-3 py-1.5 ' +
+                      (usado
+                        ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                        : 'bg-[#446c96] hover:bg-[#3a5f86] text-white')
+                    "
+                  >
                     {{ usado ? 'Agregado' : '+ Agregar' }}
                   </button>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="2" class="py-6 text-center text-sm text-slate-500">No se encontraron materiales.</td></tr>
+              <tr>
+                <td colspan="2" class="py-6 text-center text-sm text-slate-500">
+                  No se encontraron materiales.
+                </td>
+              </tr>
             }
           </tbody>
         </table>
@@ -238,10 +352,14 @@
 
       <div class="flex items-center justify-between mt-4">
         <span class="text-xs text-slate-500">
-          {{ lineas().length }} {{ lineas().length === 1 ? 'material agregado' : 'materiales agregados' }}
+          {{ lineas().length }}
+          {{ lineas().length === 1 ? 'material agregado' : 'materiales agregados' }}
         </span>
-        <button type="button" (click)="cerrarBuscador()"
-                class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2">
+        <button
+          type="button"
+          (click)="cerrarBuscador()"
+          class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2"
+        >
           Listo
         </button>
       </div>
