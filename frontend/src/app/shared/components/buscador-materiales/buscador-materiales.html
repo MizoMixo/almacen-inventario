@@ -1,0 +1,94 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+  (click)="cerrar.emit()"
+>
+  <div
+    class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-[#16304f]">{{ titulo() }}</h3>
+      <button
+        type="button"
+        (click)="cerrar.emit()"
+        aria-label="Cerrar"
+        class="p-1 rounded-lg text-slate-500 hover:bg-slate-100"
+      >
+        <svg lucideX [size]="20"></svg>
+      </button>
+    </div>
+
+    <div class="relative mb-3">
+      <svg
+        lucideSearch
+        [size]="16"
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+      ></svg>
+      <input
+        #q
+        type="text"
+        [value]="busqueda()"
+        (input)="busqueda.set(q.value)"
+        placeholder="Buscar por código o nombre"
+        class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm"
+      />
+    </div>
+
+    <div class="max-h-72 overflow-y-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
+          <tr>
+            <th class="py-2 px-2 font-semibold">Material</th>
+            <th class="py-2 px-2 font-semibold text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of resultados(); track m.codigo) {
+            @let usado = yaAgregado(m);
+            <tr class="border-b border-slate-100">
+              <td class="py-2.5 px-2">
+                <span class="font-semibold">{{ m.nombre }}</span>
+                <span class="block text-xs text-slate-500">{{ detalle()(m) }}</span>
+              </td>
+              <td class="py-2.5 px-2 text-right">
+                <button
+                  type="button"
+                  (click)="agregar.emit(m)"
+                  [disabled]="usado"
+                  [class]="
+                    'text-xs font-semibold rounded-lg px-3 py-1.5 ' +
+                    (usado
+                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                      : 'bg-[#446c96] hover:bg-[#3a5f86] text-white')
+                  "
+                >
+                  {{ usado ? 'Agregado' : '+ Agregar' }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="2" class="py-6 text-center text-sm text-slate-500">
+                No se encontraron materiales.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between mt-4">
+      <span class="text-xs text-slate-500">
+        {{ seleccionados().length }}
+        {{ seleccionados().length === 1 ? 'material agregado' : 'materiales agregados' }}
+      </span>
+      <button
+        type="button"
+        (click)="cerrar.emit()"
+        class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2"
+      >
+        Listo
+      </button>
+    </div>
+  </div>
+</div>

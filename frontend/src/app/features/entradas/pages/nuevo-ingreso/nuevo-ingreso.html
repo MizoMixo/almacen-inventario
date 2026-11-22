@@ -1,50 +1,31 @@
 @let er = errores();
 
-<div class="flex items-start justify-between gap-4 mb-4">
-  <div id="titulo-ingreso">
-    <h1 class="text-2xl font-bold text-[#16304f]">Nuevo ingreso</h1>
-    <p class="text-sm text-slate-600">Completa los datos y agrega los materiales recibidos.</p>
-
-    @if (guardado()) {
-      <div
-        id="mensaje-guardado"
-        class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-medium px-3 py-2"
-      >
-        Ingreso N.º {{ numeroGuardado() }} guardado. No se puede editar ni guardar por segunda vez.
-      </div>
-    }
-  </div>
-
-  <span
-    [class]="
-      'text-xs font-semibold rounded-full px-3 py-1 shrink-0 ' +
-      (guardado() ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800')
-    "
-  >
-    {{ guardado() ? 'Guardado · Solo lectura' : 'Borrador' }}
-  </span>
-</div>
+<app-encabezado-formulario
+  titulo="Nuevo ingreso"
+  subtitulo="Completa los datos y agrega los materiales recibidos."
+  [guardado]="guardado()"
+  [mensajeGuardado]="
+    'Ingreso N.º ' + numeroGuardado() + ' guardado. No se puede editar ni guardar por segunda vez.'
+  "
+/>
 
 <!-- Si el ingreso se guardó, todo lo de adentro queda bloqueado -->
 <fieldset [disabled]="guardado()" class="min-w-0">
   <!-- Datos del ingreso -->
-
-  <!-- Datos del ingreso -->
   <section class="bg-white rounded-2xl shadow-md p-6 mb-6">
     <h2 class="text-lg font-bold text-[#16304f] mb-4">Datos del ingreso</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-      <!-- Primera fila -->
-      <div class="md:col-span-2">
-        <label class="block text-xs font-semibold mb-1"> Fecha de ingreso * </label>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-semibold mb-1">Fecha de ingreso *</label>
         <input type="date" [(ngModel)]="fecha" [max]="hoy" [class]="clase(er.fecha)" />
         @if (er.fecha) {
           <p class="mt-1 text-xs text-red-600">{{ er.fecha }}</p>
         }
       </div>
 
-      <div class="md:col-span-3">
-        <label class="block text-xs font-semibold mb-1"> Motivo de ingreso * </label>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Motivo de ingreso *</label>
         <select [(ngModel)]="motivo" [class]="clase(er.motivo)">
           <option value="">Seleccionar motivo</option>
           @for (m of motivos; track m) {
@@ -56,9 +37,8 @@
         }
       </div>
 
-      <!-- Segunda fila -->
-      <div class="md:col-span-2">
-        <label class="block text-xs font-semibold mb-1"> Tipo de documento * </label>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Tipo de documento *</label>
         <select [(ngModel)]="tipoDocumento" [class]="clase(er.tipoDocumento)">
           <option value="">Seleccionar tipo</option>
           @for (t of tiposDocumento; track t) {
@@ -70,8 +50,24 @@
         }
       </div>
 
-      <div class="md:col-span-2">
-        <label class="block text-xs font-semibold mb-1"> Número de documento * </label>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Serie</label>
+        <input
+          type="text"
+          [value]="serie"
+          (input)="alEscribirSerie($event)"
+          maxlength="10"
+          placeholder="Ej.: F001"
+          autocomplete="off"
+          [class]="clase(er.serie)"
+        />
+        @if (er.serie) {
+          <p class="mt-1 text-xs text-red-600">{{ er.serie }}</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold mb-1">Número de documento *</label>
         <input
           type="text"
           inputmode="numeric"
@@ -87,25 +83,8 @@
         }
       </div>
 
-      <div class="md:col-span-2">
-        <label class="block text-xs font-semibold mb-1"> Serie </label>
-        <input
-          type="text"
-          [value]="serie"
-          (input)="alEscribirSerie($event)"
-          maxlength="10"
-          placeholder="Ej.: F001"
-          autocomplete="off"
-          [class]="clase(er.serie)"
-        />
-        @if (er.serie) {
-          <p class="mt-1 text-xs text-red-600">{{ er.serie }}</p>
-        }
-      </div>
-
-      <!-- Tercera fila -->
-      <div class="md:col-span-6">
-        <label class="block text-xs font-semibold mb-1"> Observaciones </label>
+      <div class="md:col-span-3">
+        <label class="block text-xs font-semibold mb-1">Observaciones</label>
         <textarea
           [(ngModel)]="observaciones"
           rows="3"
@@ -215,134 +194,22 @@
   </section>
 </fieldset>
 
-<!-- Acciones -->
-<div class="flex flex-col items-end gap-2">
-  @if (!guardado()) {
-    @if (error()) {
-      <p class="text-sm text-rose-600">{{ error() }}</p>
-    }
-    <div class="flex items-center gap-3">
-      <a routerLink="/entradas" class="text-sm font-semibold text-slate-600 hover:underline"
-        >Cancelar</a
-      >
-      <button
-        type="button"
-        (click)="guardar()"
-        class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow"
-      >
-        Guardar ingreso
-      </button>
-    </div>
-  } @else {
-    <div class="flex items-center gap-3">
-      <a routerLink="/entradas" class="text-sm font-semibold text-slate-600 hover:underline"
-        >Volver a entradas</a
-      >
-      <button
-        type="button"
-        (click)="nuevoIngreso()"
-        class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2.5 shadow"
-      >
-        Nuevo ingreso
-      </button>
-    </div>
-  }
-</div>
+<app-acciones-formulario
+  [guardado]="guardado()"
+  [error]="error()"
+  rutaVolver="/entradas"
+  textoGuardar="Guardar ingreso"
+  textoVolver="Volver a entradas"
+  textoNuevo="Nuevo ingreso"
+  (guardar)="guardar()"
+  (nuevo)="nuevoIngreso()"
+/>
 
-<!-- Ventana del buscador de materiales -->
 @if (modalAbierto()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-    (click)="cerrarBuscador()"
-  >
-    <div
-      class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-[#16304f]">Buscar material</h3>
-        <button
-          type="button"
-          (click)="cerrarBuscador()"
-          aria-label="Cerrar"
-          class="p-1 rounded-lg text-slate-500 hover:bg-slate-100"
-        >
-          <svg lucideX [size]="20"></svg>
-        </button>
-      </div>
-
-      <div class="relative mb-3">
-        <svg
-          lucideSearch
-          [size]="16"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-        ></svg>
-        <input
-          #q
-          type="text"
-          [value]="busqueda()"
-          (input)="busqueda.set(q.value)"
-          placeholder="Buscar por código o nombre"
-          class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm"
-        />
-      </div>
-
-      <div class="max-h-72 overflow-y-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
-            <tr>
-              <th class="py-2 px-2 font-semibold">Material</th>
-              <th class="py-2 px-2 font-semibold text-right">Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (m of resultados(); track m.codigo) {
-              @let usado = yaAgregado(m);
-              <tr class="border-b border-slate-100">
-                <td class="py-2.5 px-2">
-                  <span class="font-semibold">{{ m.nombre }}</span>
-                  <span class="block text-xs text-slate-500">{{ m.codigo }} · {{ m.unidad }}</span>
-                </td>
-                <td class="py-2.5 px-2 text-right">
-                  <button
-                    type="button"
-                    (click)="agregar(m)"
-                    [disabled]="usado"
-                    [class]="
-                      'text-xs font-semibold rounded-lg px-3 py-1.5 ' +
-                      (usado
-                        ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#446c96] hover:bg-[#3a5f86] text-white')
-                    "
-                  >
-                    {{ usado ? 'Agregado' : '+ Agregar' }}
-                  </button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="2" class="py-6 text-center text-sm text-slate-500">
-                  No se encontraron materiales.
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="flex items-center justify-between mt-4">
-        <span class="text-xs text-slate-500">
-          {{ lineas().length }}
-          {{ lineas().length === 1 ? 'material agregado' : 'materiales agregados' }}
-        </span>
-        <button
-          type="button"
-          (click)="cerrarBuscador()"
-          class="bg-[#446c96] hover:bg-[#3a5f86] text-white text-sm font-semibold rounded-lg px-5 py-2"
-        >
-          Listo
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-buscador-materiales
+    [materiales]="materiales"
+    [seleccionados]="seleccionados()"
+    (agregar)="agregar($event)"
+    (cerrar)="cerrarBuscador()"
+  />
 }
