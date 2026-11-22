@@ -1,11 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Sesion } from '../../sesion';
+import { Sesion } from '@core/auth/sesion';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
 
-interface Material { codigo: string; nombre: string; unidad: string; }
-interface Linea { material: Material; almacen: string; cantidad: number | null; }
+interface Material {
+  codigo: string;
+  nombre: string;
+  unidad: string;
+}
+interface Linea {
+  material: Material;
+  almacen: string;
+  cantidad: number | null;
+}
 
 const REGEX_SERIE = /^[A-Z0-9][A-Z0-9-]{0,9}$/;
 const REGEX_NUMERO = /^[0-9]{1,10}$/;
@@ -33,7 +41,7 @@ export class NuevoIngreso {
     { codigo: 'MAT-005', nombre: 'Pintura látex blanco 4L', unidad: 'gal' },
   ];
 
- // Datos del ingreso (la fecha empieza vacía)
+  // Datos del ingreso (la fecha empieza vacía)
   fecha = '';
   motivo = '';
   tipoDocumento = '';
@@ -47,13 +55,15 @@ export class NuevoIngreso {
   busqueda = signal('');
 
   // Estado del formulario
-  intentado = signal(false);   // ya se intentó guardar: se muestran los errores
+  intentado = signal(false); // ya se intentó guardar: se muestran los errores
   error = signal('');
-  guardado = signal(false);    // modo solo lectura
+  guardado = signal(false); // modo solo lectura
   numeroGuardado = signal(0);
-  private contador = 136;      // número provisional; el real lo asignará el backend
+  private contador = 136; // número provisional; el real lo asignará el backend
 
-  get hoy() { return new Date().toLocaleDateString('en-CA'); }
+  get hoy() {
+    return new Date().toLocaleDateString('en-CA');
+  }
 
   // ---------- Validaciones ----------
   vFecha(): string {
@@ -61,8 +71,12 @@ export class NuevoIngreso {
     if (this.fecha > this.hoy) return 'La fecha no puede ser futura.';
     return '';
   }
-  vMotivo() { return this.motivo ? '' : 'Selecciona un motivo.'; }
-  vTipoDocumento() { return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.'; }
+  vMotivo() {
+    return this.motivo ? '' : 'Selecciona un motivo.';
+  }
+  vTipoDocumento() {
+    return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.';
+  }
   vSerie(): string {
     const s = this.serie.trim();
     if (!s) return ''; // es opcional
@@ -71,15 +85,22 @@ export class NuevoIngreso {
   vNumero(): string {
     const n = this.numeroDocumento.trim();
     if (!n) return 'Ingresa el número de documento.';
-    if (!REGEX_NUMERO.test(n) || !/[1-9]/.test(n)) return 'Solo números (máx. 10); no puede ser todo ceros.';
+    if (!REGEX_NUMERO.test(n) || !/[1-9]/.test(n))
+      return 'Solo números (máx. 10); no puede ser todo ceros.';
     return '';
   }
 
-  vAlmacen(l: Linea) { return l.almacen ? '' : 'Elige almacén'; }
-  vCantidad(l: Linea) { return l.cantidad !== null && l.cantidad > 0 ? '' : 'Mayor que cero'; }
+  vAlmacen(l: Linea) {
+    return l.almacen ? '' : 'Elige almacén';
+  }
+  vCantidad(l: Linea) {
+    return l.cantidad !== null && l.cantidad > 0 ? '' : 'Mayor que cero';
+  }
 
   // Solo muestra el error después de intentar guardar
-  e(mensaje: string) { return this.intentado() ? mensaje : ''; }
+  e(mensaje: string) {
+    return this.intentado() ? mensaje : '';
+  }
 
   errores() {
     return {
@@ -95,20 +116,29 @@ export class NuevoIngreso {
 
   private formularioValido(): boolean {
     const lineas = this.lineas();
-    return !this.vFecha() && !this.vMotivo() && !this.vTipoDocumento() && !this.vSerie()
-      && !this.vNumero()
-      && lineas.length > 0
-      && lineas.every(l => !this.vAlmacen(l) && !this.vCantidad(l));
+    return (
+      !this.vFecha() &&
+      !this.vMotivo() &&
+      !this.vTipoDocumento() &&
+      !this.vSerie() &&
+      !this.vNumero() &&
+      lineas.length > 0 &&
+      lineas.every((l) => !this.vAlmacen(l) && !this.vCantidad(l))
+    );
   }
 
   // Clases de los cuadros: rojo si hay error
   clase(mensaje: string) {
-    return 'w-full rounded-lg border px-3 py-2 text-sm '
-      + (mensaje ? 'border-red-500 bg-red-50 campo-error' : 'border-slate-300 bg-white');
+    return (
+      'w-full rounded-lg border px-3 py-2 text-sm ' +
+      (mensaje ? 'border-red-500 bg-red-50 campo-error' : 'border-slate-300 bg-white')
+    );
   }
   claseLinea(mensaje: string) {
-    return 'w-full rounded-lg border px-2 py-1.5 text-sm '
-      + (mensaje ? 'border-red-500 bg-red-50 campo-error' : 'border-slate-300 bg-white');
+    return (
+      'w-full rounded-lg border px-2 py-1.5 text-sm ' +
+      (mensaje ? 'border-red-500 bg-red-50 campo-error' : 'border-slate-300 bg-white')
+    );
   }
 
   // Serie y número: se filtran los caracteres no permitidos mientras se escribe
@@ -126,26 +156,31 @@ export class NuevoIngreso {
   // ---------- Buscador de materiales ----------
   resultados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
-    return this.materiales.filter(m =>
-      m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
+    return this.materiales.filter(
+      (m) => m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
     );
   });
 
   yaAgregado(m: Material) {
-    return this.lineas().some(l => l.material.codigo === m.codigo);
+    return this.lineas().some((l) => l.material.codigo === m.codigo);
   }
 
-  abrirBuscador() { this.busqueda.set(''); this.modalAbierto.set(true); }
-  cerrarBuscador() { this.modalAbierto.set(false); }
+  abrirBuscador() {
+    this.busqueda.set('');
+    this.modalAbierto.set(true);
+  }
+  cerrarBuscador() {
+    this.modalAbierto.set(false);
+  }
 
   // Agrega la fila sin cerrar la ventana
   agregar(m: Material) {
     if (this.yaAgregado(m)) return;
-    this.lineas.update(l => [...l, { material: m, almacen: '', cantidad: null }]);
+    this.lineas.update((l) => [...l, { material: m, almacen: '', cantidad: null }]);
   }
 
   quitar(index: number) {
-    this.lineas.update(l => l.filter((_, i) => i !== index));
+    this.lineas.update((l) => l.filter((_, i) => i !== index));
   }
 
   // ---------- Guardar ----------
@@ -156,22 +191,33 @@ export class NuevoIngreso {
     if (!this.formularioValido()) {
       this.error.set('Revisa los campos marcados en rojo.');
       setTimeout(() =>
-        document.querySelector('.campo-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        document
+          .querySelector('.campo-error')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      );
       return;
     }
     this.error.set('');
 
     // Por ahora solo se muestra en la consola (F12). Con el backend, aquí se enviará.
     console.log('Ingreso listo para guardar:', {
-      fecha: this.fecha, motivo: this.motivo, tipoDocumento: this.tipoDocumento,
-      serie: this.serie, numeroDocumento: this.numeroDocumento,
-      usuario: this.sesion.nombre, observaciones: this.observaciones, lineas: this.lineas(),
+      fecha: this.fecha,
+      motivo: this.motivo,
+      tipoDocumento: this.tipoDocumento,
+      serie: this.serie,
+      numeroDocumento: this.numeroDocumento,
+      usuario: this.sesion.nombre,
+      observaciones: this.observaciones,
+      lineas: this.lineas(),
     });
 
     this.numeroGuardado.set(this.contador++);
     this.guardado.set(true);
     setTimeout(() =>
-      document.getElementById('mensaje-guardado')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      document
+        .getElementById('mensaje-guardado')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
   }
 
   // Limpia todo para registrar otro ingreso
@@ -189,6 +235,9 @@ export class NuevoIngreso {
     this.error.set('');
     this.guardado.set(false);
     setTimeout(() =>
-      document.getElementById('titulo-ingreso')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      document
+        .getElementById('titulo-ingreso')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
   }
 }

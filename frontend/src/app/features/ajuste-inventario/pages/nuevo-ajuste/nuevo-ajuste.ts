@@ -1,18 +1,40 @@
-import { Component, computed, inject, signal  } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideDownload, LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
-import { Sesion } from '../../sesion';
+import { Sesion } from '@core/auth/sesion';
 import {
-  claseCampo, claseCampoTabla, errorFecha, hoyISO, irAId, irAlPrimerError,
-} from '../../shared/validaciones';
+  claseCampo,
+  claseCampoTabla,
+  errorFecha,
+  hoyISO,
+  irAId,
+  irAlPrimerError,
+} from '@shared/utils/validaciones';
 
-interface Material { codigo: string; nombre: string; unidad: string; }
-interface Linea { material: Material; sistema: number; fisico: number | null; nota: string; }
+interface Material {
+  codigo: string;
+  nombre: string;
+  unidad: string;
+}
+interface Linea {
+  material: Material;
+  sistema: number;
+  fisico: number | null;
+  nota: string;
+}
 
 @Component({
   selector: 'app-nuevo-ajuste',
-  imports: [FormsModule, RouterLink, LucideDownload, LucidePlus, LucideSearch, LucideTrash, LucideX],
+  imports: [
+    FormsModule,
+    RouterLink,
+    LucideDownload,
+    LucidePlus,
+    LucideSearch,
+    LucideTrash,
+    LucideX,
+  ],
   templateUrl: './nuevo-ajuste.html',
   styleUrl: './nuevo-ajuste.css',
 })
@@ -41,7 +63,8 @@ export class NuevoAjuste {
 
   // Datos del ajuste (la fecha empieza vacía). Desde "Conteo general trimestral" el tipo ya viene elegido.
   fecha = '';
-  tipo = this.route.snapshot.queryParamMap.get('tipo') === 'general' ? this.tipoGeneral : this.tipos[0];
+  tipo =
+    this.route.snapshot.queryParamMap.get('tipo') === 'general' ? this.tipoGeneral : this.tipos[0];
   documento = '';
   justificacion = '';
 
@@ -59,9 +82,13 @@ export class NuevoAjuste {
 
   clase = claseCampo;
   claseLinea = claseCampoTabla;
-  get hoy() { return hoyISO(); }
+  get hoy() {
+    return hoyISO();
+  }
 
-  esGeneral() { return this.tipo === this.tipoGeneral; }
+  esGeneral() {
+    return this.tipo === this.tipoGeneral;
+  }
 
   cambiarAlmacen(valor: string) {
     this.almacen.set(valor);
@@ -79,12 +106,18 @@ export class NuevoAjuste {
   }
 
   // ---------- Validaciones ----------
-  vAlmacen() { return this.almacen() ? '' : 'Selecciona el almacén.'; }
-  vTipo() { return this.tipo ? '' : 'Selecciona el tipo de ajuste.'; }
+  vAlmacen() {
+    return this.almacen() ? '' : 'Selecciona el almacén.';
+  }
+  vTipo() {
+    return this.tipo ? '' : 'Selecciona el tipo de ajuste.';
+  }
   vDocumento(): string {
     const d = this.documento.trim();
     if (!d) return ''; // es opcional
-    return /^[A-Z0-9][A-Z0-9\-\/]{0,29}$/.test(d) ? '' : 'Usa letras, números, guion o barra (máx. 30).';
+    return /^[A-Z0-9][A-Z0-9\-\/]{0,29}$/.test(d)
+      ? ''
+      : 'Usa letras, números, guion o barra (máx. 30).';
   }
   vJustificacion(): string {
     const j = this.justificacion.trim();
@@ -94,10 +127,14 @@ export class NuevoAjuste {
     return '';
   }
   vFisico(l: Linea) {
-    return l.fisico === null || l.fisico === undefined || l.fisico < 0 ? 'Obligatorio (0 o más)' : '';
+    return l.fisico === null || l.fisico === undefined || l.fisico < 0
+      ? 'Obligatorio (0 o más)'
+      : '';
   }
 
-  e(mensaje: string) { return this.intentado() ? mensaje : ''; }
+  e(mensaje: string) {
+    return this.intentado() ? mensaje : '';
+  }
 
   errores() {
     return {
@@ -112,10 +149,15 @@ export class NuevoAjuste {
 
   private formularioValido(): boolean {
     const lineas = this.lineas();
-    return !errorFecha(this.fecha) && !this.vAlmacen() && !this.vTipo() && !this.vDocumento()
-      && !this.vJustificacion()
-      && lineas.length > 0
-      && lineas.every(l => !this.vFisico(l));
+    return (
+      !errorFecha(this.fecha) &&
+      !this.vAlmacen() &&
+      !this.vTipo() &&
+      !this.vDocumento() &&
+      !this.vJustificacion() &&
+      lineas.length > 0 &&
+      lineas.every((l) => !this.vFisico(l))
+    );
   }
 
   alEscribirDocumento(ev: Event) {
@@ -127,22 +169,31 @@ export class NuevoAjuste {
   // ---------- Tabla y buscador ----------
   lineasVisibles = computed(() => {
     const texto = this.filtro().toLowerCase().trim();
-    return this.lineas().filter(l =>
-      l.material.codigo.toLowerCase().includes(texto) || l.material.nombre.toLowerCase().includes(texto),
+    return this.lineas().filter(
+      (l) =>
+        l.material.codigo.toLowerCase().includes(texto) ||
+        l.material.nombre.toLowerCase().includes(texto),
     );
   });
 
   // Incluye materiales con stock 0, para poder cargar el stock inicial
   resultados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
-    return this.materiales.filter(m =>
-      m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
+    return this.materiales.filter(
+      (m) => m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
     );
   });
 
-  yaAgregado(m: Material) { return this.lineas().some(l => l.material.codigo === m.codigo); }
-  abrirBuscador() { this.busqueda.set(''); this.modalAbierto.set(true); }
-  cerrarBuscador() { this.modalAbierto.set(false); }
+  yaAgregado(m: Material) {
+    return this.lineas().some((l) => l.material.codigo === m.codigo);
+  }
+  abrirBuscador() {
+    this.busqueda.set('');
+    this.modalAbierto.set(true);
+  }
+  cerrarBuscador() {
+    this.modalAbierto.set(false);
+  }
 
   // El stock físico empieza igual al del sistema
   private nuevaLinea(m: Material): Linea {
@@ -152,17 +203,19 @@ export class NuevoAjuste {
 
   agregar(m: Material) {
     if (this.yaAgregado(m)) return;
-    this.lineas.update(l => [...l, this.nuevaLinea(m)]);
+    this.lineas.update((l) => [...l, this.nuevaLinea(m)]);
   }
 
   cargarTodos() {
-    const usados = this.lineas().map(l => l.material.codigo);
-    const nuevas = this.materiales.filter(m => !usados.includes(m.codigo)).map(m => this.nuevaLinea(m));
-    this.lineas.update(l => [...l, ...nuevas]);
+    const usados = this.lineas().map((l) => l.material.codigo);
+    const nuevas = this.materiales
+      .filter((m) => !usados.includes(m.codigo))
+      .map((m) => this.nuevaLinea(m));
+    this.lineas.update((l) => [...l, ...nuevas]);
   }
 
   quitar(codigo: string) {
-    this.lineas.update(l => l.filter(x => x.material.codigo !== codigo));
+    this.lineas.update((l) => l.filter((x) => x.material.codigo !== codigo));
   }
 
   // Diferencia = stock físico contado - stock del sistema
@@ -172,7 +225,9 @@ export class NuevoAjuste {
   }
 
   resumen() {
-    let sobrantes = 0, faltantes = 0, sinCambio = 0;
+    let sobrantes = 0,
+      faltantes = 0,
+      sinCambio = 0;
     for (const l of this.lineas()) {
       const d = this.diferencia(l);
       if (d === null) continue;
@@ -196,9 +251,9 @@ export class NuevoAjuste {
 
     // Solo las líneas con diferencia generan movimientos
     const movimientos = this.lineas()
-      .map(l => ({ l, d: this.diferencia(l)! }))
-      .filter(x => x.d !== 0)
-      .map(x => ({
+      .map((l) => ({ l, d: this.diferencia(l)! }))
+      .filter((x) => x.d !== 0)
+      .map((x) => ({
         material: x.l.material.codigo,
         tipo: x.d > 0 ? 'AUMENTO' : 'DISMINUCION',
         cantidad: Math.abs(x.d),
@@ -212,8 +267,13 @@ export class NuevoAjuste {
 
     // Por ahora solo se muestra en la consola (F12). Con el backend, aquí se enviará.
     console.log('Ajuste listo para guardar:', {
-      fecha: this.fecha, almacen: this.almacen(), tipo: this.tipo, documento: this.documento,
-      justificacion: this.justificacion, usuario: this.sesion.nombre, movimientos,
+      fecha: this.fecha,
+      almacen: this.almacen(),
+      tipo: this.tipo,
+      documento: this.documento,
+      justificacion: this.justificacion,
+      usuario: this.sesion.nombre,
+      movimientos,
     });
 
     this.numeroGuardado.set(this.contador++);
@@ -222,7 +282,10 @@ export class NuevoAjuste {
   }
 
   nuevoAjuste() {
-    this.fecha = ''; this.tipo = this.tipos[0]; this.documento = ''; this.justificacion = '';
+    this.fecha = '';
+    this.tipo = this.tipos[0];
+    this.documento = '';
+    this.justificacion = '';
     this.almacen.set('');
     this.lineas.set([]);
     this.filtro.set('');

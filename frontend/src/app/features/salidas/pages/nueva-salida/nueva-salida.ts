@@ -1,15 +1,31 @@
-import { Component, computed, inject, signal  } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
-import { Sesion } from '../../sesion';
+import { Sesion } from '@core/auth/sesion';
 import {
-  claseCampo, claseCampoTabla, errorFecha, errorNumero, errorSerie, hoyISO,
-  irAId, irAlPrimerError, limpiarNumero, limpiarSerie,
-} from '../../shared/validaciones';
+  claseCampo,
+  claseCampoTabla,
+  errorFecha,
+  errorNumero,
+  errorSerie,
+  hoyISO,
+  irAId,
+  irAlPrimerError,
+  limpiarNumero,
+  limpiarSerie,
+} from '@shared/utils/validaciones';
 
-interface Material { codigo: string; nombre: string; unidad: string; }
-interface Linea { material: Material; almacen: string; cantidad: number | null; }
+interface Material {
+  codigo: string;
+  nombre: string;
+  unidad: string;
+}
+interface Linea {
+  material: Material;
+  almacen: string;
+  cantidad: number | null;
+}
 
 @Component({
   selector: 'app-nueva-salida',
@@ -17,7 +33,6 @@ interface Linea { material: Material; almacen: string; cantidad: number | null; 
   templateUrl: './nueva-salida.html',
   styleUrl: './nueva-salida.css',
 })
-
 export class NuevaSalida {
   private sesion = inject(Sesion);
 
@@ -57,15 +72,27 @@ export class NuevaSalida {
 
   clase = claseCampo;
   claseLinea = claseCampoTabla;
-  get hoy() { return hoyISO(); }
+  get hoy() {
+    return hoyISO();
+  }
 
   // ---------- Validaciones ----------
-  vMotivo() { return this.motivo ? '' : 'Selecciona un motivo.'; }
-  vTipoDocumento() { return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.'; }
-  vAlmacen(l: Linea) { return l.almacen ? '' : 'Elige almacén'; }
-  vCantidad(l: Linea) { return l.cantidad !== null && l.cantidad > 0 ? '' : 'Mayor que cero'; }
+  vMotivo() {
+    return this.motivo ? '' : 'Selecciona un motivo.';
+  }
+  vTipoDocumento() {
+    return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.';
+  }
+  vAlmacen(l: Linea) {
+    return l.almacen ? '' : 'Elige almacén';
+  }
+  vCantidad(l: Linea) {
+    return l.cantidad !== null && l.cantidad > 0 ? '' : 'Mayor que cero';
+  }
 
-  e(mensaje: string) { return this.intentado() ? mensaje : ''; }
+  e(mensaje: string) {
+    return this.intentado() ? mensaje : '';
+  }
 
   errores() {
     return {
@@ -80,33 +107,51 @@ export class NuevaSalida {
 
   private formularioValido(): boolean {
     const lineas = this.lineas();
-    return !errorFecha(this.fecha) && !this.vMotivo() && !this.vTipoDocumento()
-      && !errorSerie(this.serie) && !errorNumero(this.numeroDocumento)
-      && lineas.length > 0
-      && lineas.every(l => !this.vAlmacen(l) && !this.vCantidad(l));
+    return (
+      !errorFecha(this.fecha) &&
+      !this.vMotivo() &&
+      !this.vTipoDocumento() &&
+      !errorSerie(this.serie) &&
+      !errorNumero(this.numeroDocumento) &&
+      lineas.length > 0 &&
+      lineas.every((l) => !this.vAlmacen(l) && !this.vCantidad(l))
+    );
   }
 
-  alEscribirSerie(ev: Event) { this.serie = limpiarSerie(ev); }
-  alEscribirNumero(ev: Event) { this.numeroDocumento = limpiarNumero(ev); }
+  alEscribirSerie(ev: Event) {
+    this.serie = limpiarSerie(ev);
+  }
+  alEscribirNumero(ev: Event) {
+    this.numeroDocumento = limpiarNumero(ev);
+  }
 
   // ---------- Buscador de materiales ----------
   resultados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
-    return this.materiales.filter(m =>
-      m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
+    return this.materiales.filter(
+      (m) => m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
     );
   });
 
-  yaAgregado(m: Material) { return this.lineas().some(l => l.material.codigo === m.codigo); }
-  abrirBuscador() { this.busqueda.set(''); this.modalAbierto.set(true); }
-  cerrarBuscador() { this.modalAbierto.set(false); }
+  yaAgregado(m: Material) {
+    return this.lineas().some((l) => l.material.codigo === m.codigo);
+  }
+  abrirBuscador() {
+    this.busqueda.set('');
+    this.modalAbierto.set(true);
+  }
+  cerrarBuscador() {
+    this.modalAbierto.set(false);
+  }
 
   agregar(m: Material) {
     if (this.yaAgregado(m)) return;
-    this.lineas.update(l => [...l, { material: m, almacen: '', cantidad: null }]);
+    this.lineas.update((l) => [...l, { material: m, almacen: '', cantidad: null }]);
   }
 
-  quitar(index: number) { this.lineas.update(l => l.filter((_, i) => i !== index)); }
+  quitar(index: number) {
+    this.lineas.update((l) => l.filter((_, i) => i !== index));
+  }
 
   // ---------- Guardar ----------
   guardar() {
@@ -122,10 +167,16 @@ export class NuevaSalida {
 
     // Por ahora solo se muestra en la consola (F12). Con el backend, aquí se enviará.
     console.log('Salida lista para guardar:', {
-      fecha: this.fecha, motivo: this.motivo, tipoDocumento: this.tipoDocumento,
-      serie: this.serie, numeroDocumento: this.numeroDocumento, area: this.area,
-      receptor: this.receptor, observaciones: this.observaciones,
-      usuario: this.sesion.nombre, lineas: this.lineas(),
+      fecha: this.fecha,
+      motivo: this.motivo,
+      tipoDocumento: this.tipoDocumento,
+      serie: this.serie,
+      numeroDocumento: this.numeroDocumento,
+      area: this.area,
+      receptor: this.receptor,
+      observaciones: this.observaciones,
+      usuario: this.sesion.nombre,
+      lineas: this.lineas(),
     });
 
     this.numeroGuardado.set(this.contador++);
@@ -134,8 +185,14 @@ export class NuevaSalida {
   }
 
   nuevaSalida() {
-    this.fecha = ''; this.motivo = ''; this.tipoDocumento = ''; this.serie = '';
-    this.numeroDocumento = ''; this.area = ''; this.receptor = ''; this.observaciones = '';
+    this.fecha = '';
+    this.motivo = '';
+    this.tipoDocumento = '';
+    this.serie = '';
+    this.numeroDocumento = '';
+    this.area = '';
+    this.receptor = '';
+    this.observaciones = '';
     this.lineas.set([]);
     this.busqueda.set('');
     this.intentado.set(false);

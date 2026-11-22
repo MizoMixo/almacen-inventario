@@ -1,16 +1,29 @@
-import { Component, computed, inject, signal  } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
-import { Sesion } from '../../sesion';
+import { Sesion } from '@core/auth/sesion';
 import {
-  claseCampo, claseCampoTabla, errorFecha, errorNumero, hoyISO,
-  irAId, irAlPrimerError, limpiarNumero,
-} from '../../shared/validaciones';
+  claseCampo,
+  claseCampoTabla,
+  errorFecha,
+  errorNumero,
+  hoyISO,
+  irAId,
+  irAlPrimerError,
+  limpiarNumero,
+} from '@shared/utils/validaciones';
 
-interface Material { codigo: string; nombre: string; unidad: string; }
-interface Linea { material: Material; stock: number; cantidad: number | null; }
-
+interface Material {
+  codigo: string;
+  nombre: string;
+  unidad: string;
+}
+interface Linea {
+  material: Material;
+  stock: number;
+  cantidad: number | null;
+}
 
 @Component({
   selector: 'app-nueva-transferencia',
@@ -61,7 +74,9 @@ export class NuevaTransferencia {
 
   clase = claseCampo;
   claseLinea = claseCampoTabla;
-  get hoy() { return hoyISO(); }
+  get hoy() {
+    return hoyISO();
+  }
 
   cambiarOrigen(valor: string) {
     this.origen.set(valor);
@@ -70,21 +85,29 @@ export class NuevaTransferencia {
   }
 
   // ---------- Validaciones ----------
-  vOrigen() { return this.origen() ? '' : 'Selecciona el almacén de origen.'; }
+  vOrigen() {
+    return this.origen() ? '' : 'Selecciona el almacén de origen.';
+  }
   vDestino() {
     if (!this.destino) return 'Selecciona el almacén de destino.';
     if (this.destino === this.origen()) return 'Debe ser distinto al de origen.';
     return '';
   }
-  vMotivo() { return this.motivo ? '' : 'Selecciona un motivo.'; }
-  vTipoDocumento() { return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.'; }
+  vMotivo() {
+    return this.motivo ? '' : 'Selecciona un motivo.';
+  }
+  vTipoDocumento() {
+    return this.tipoDocumento ? '' : 'Selecciona el tipo de documento.';
+  }
   vCantidad(l: Linea) {
     if (l.cantidad === null || l.cantidad <= 0) return 'Mayor que cero';
     if (l.cantidad > l.stock) return 'Máx. ' + l.stock;
     return '';
   }
 
-  e(mensaje: string) { return this.intentado() ? mensaje : ''; }
+  e(mensaje: string) {
+    return this.intentado() ? mensaje : '';
+  }
 
   errores() {
     return {
@@ -100,13 +123,21 @@ export class NuevaTransferencia {
 
   private formularioValido(): boolean {
     const lineas = this.lineas();
-    return !errorFecha(this.fecha) && !this.vOrigen() && !this.vDestino() && !this.vMotivo()
-      && !this.vTipoDocumento() && !errorNumero(this.numeroDocumento)
-      && lineas.length > 0
-      && lineas.every(l => !this.vCantidad(l));
+    return (
+      !errorFecha(this.fecha) &&
+      !this.vOrigen() &&
+      !this.vDestino() &&
+      !this.vMotivo() &&
+      !this.vTipoDocumento() &&
+      !errorNumero(this.numeroDocumento) &&
+      lineas.length > 0 &&
+      lineas.every((l) => !this.vCantidad(l))
+    );
   }
 
-  alEscribirNumero(ev: Event) { this.numeroDocumento = limpiarNumero(ev); }
+  alEscribirNumero(ev: Event) {
+    this.numeroDocumento = limpiarNumero(ev);
+  }
 
   // ---------- Buscador de materiales ----------
   stockEn(codigo: string): number {
@@ -117,22 +148,35 @@ export class NuevaTransferencia {
   resultados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
     const stockOrigen = this.stock[this.origen()] ?? {};
-    return this.materiales.filter(m =>
-      (stockOrigen[m.codigo] ?? 0) > 0 &&
-      (m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto)),
+    return this.materiales.filter(
+      (m) =>
+        (stockOrigen[m.codigo] ?? 0) > 0 &&
+        (m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto)),
     );
   });
 
-  yaAgregado(m: Material) { return this.lineas().some(l => l.material.codigo === m.codigo); }
-  abrirBuscador() { this.busqueda.set(''); this.modalAbierto.set(true); }
-  cerrarBuscador() { this.modalAbierto.set(false); }
+  yaAgregado(m: Material) {
+    return this.lineas().some((l) => l.material.codigo === m.codigo);
+  }
+  abrirBuscador() {
+    this.busqueda.set('');
+    this.modalAbierto.set(true);
+  }
+  cerrarBuscador() {
+    this.modalAbierto.set(false);
+  }
 
   agregar(m: Material) {
     if (this.yaAgregado(m)) return;
-    this.lineas.update(l => [...l, { material: m, stock: this.stockEn(m.codigo), cantidad: null }]);
+    this.lineas.update((l) => [
+      ...l,
+      { material: m, stock: this.stockEn(m.codigo), cantidad: null },
+    ]);
   }
 
-  quitar(index: number) { this.lineas.update(l => l.filter((_, i) => i !== index)); }
+  quitar(index: number) {
+    this.lineas.update((l) => l.filter((_, i) => i !== index));
+  }
 
   // ---------- Guardar ----------
   guardar() {
@@ -148,9 +192,15 @@ export class NuevaTransferencia {
 
     // Por ahora solo se muestra en la consola (F12). Con el backend, aquí se enviará.
     console.log('Transferencia lista para guardar:', {
-      fecha: this.fecha, origen: this.origen(), destino: this.destino, motivo: this.motivo,
-      tipoDocumento: this.tipoDocumento, numeroDocumento: this.numeroDocumento,
-      observaciones: this.observaciones, usuario: this.sesion.nombre, lineas: this.lineas(),
+      fecha: this.fecha,
+      origen: this.origen(),
+      destino: this.destino,
+      motivo: this.motivo,
+      tipoDocumento: this.tipoDocumento,
+      numeroDocumento: this.numeroDocumento,
+      observaciones: this.observaciones,
+      usuario: this.sesion.nombre,
+      lineas: this.lineas(),
     });
 
     this.numeroGuardado.set(this.contador++);
@@ -159,8 +209,12 @@ export class NuevaTransferencia {
   }
 
   nuevaTransferencia() {
-    this.fecha = ''; this.destino = ''; this.motivo = this.motivos[0]; this.tipoDocumento = '';
-    this.numeroDocumento = ''; this.observaciones = '';
+    this.fecha = '';
+    this.destino = '';
+    this.motivo = this.motivos[0];
+    this.tipoDocumento = '';
+    this.numeroDocumento = '';
+    this.observaciones = '';
     this.origen.set('');
     this.lineas.set([]);
     this.busqueda.set('');

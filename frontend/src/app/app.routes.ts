@@ -1,27 +1,45 @@
 import { Routes } from '@angular/router';
-import { Inicio } from './pages/inicio/inicio';
-import { Entradas } from './pages/entradas/entradas';
-import { NuevoIngreso } from './pages/nuevo-ingreso/nuevo-ingreso';
-import { Salidas } from './pages/salidas/salidas';
-import { NuevaSalida } from './pages/nueva-salida/nueva-salida';
-import { Transferencias } from './pages/transferencias/transferencias';
-import { NuevaTransferencia } from './pages/nueva-transferencia/nueva-transferencia';
-import { AjusteInventario } from './pages/ajuste-inventario/ajuste-inventario';
-import { NuevoAjuste } from './pages/nuevo-ajuste/nuevo-ajuste';
-import { ConsultarStock } from './pages/consultar-stock/consultar-stock';
+import { MainLayout } from './core/layout/main-layout/main-layout';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'inicio', pathMatch: 'full' },
-  { path: 'inicio', component: Inicio },
-  { path: 'entradas', component:  Entradas},
-  { path: 'entradas/nuevo', component: NuevoIngreso },
-  { path: 'salidas', component: Salidas },
-  { path: 'salidas/nueva', component: NuevaSalida },
-  { path: 'transferencias', component: Transferencias },
-  { path: 'transferencias/nueva', component: NuevaTransferencia },
-  { path: 'ajuste-inventario', component: AjusteInventario },
-  { path: 'ajuste-inventario/nuevo', component: NuevoAjuste },
-  { path: 'stock', component: ConsultarStock },
+  {
+    path: '',
+    component: MainLayout,
+    children: [
+      { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+      {
+        path: 'inicio',
+        loadChildren: () => import('./features/inicio/inicio.routes').then((m) => m.INICIO_ROUTES),
+      },
+      {
+        path: 'entradas',
+        loadChildren: () =>
+          import('./features/entradas/entradas.routes').then((m) => m.ENTRADAS_ROUTES),
+      },
+      {
+        path: 'salidas',
+        loadChildren: () =>
+          import('./features/salidas/salidas.routes').then((m) => m.SALIDAS_ROUTES),
+      },
+      {
+        path: 'transferencias',
+        loadChildren: () =>
+          import('./features/transferencias/transferencias.routes').then(
+            (m) => m.TRANSFERENCIAS_ROUTES,
+          ),
+      },
+      {
+        path: 'ajuste-inventario',
+        loadChildren: () =>
+          import('./features/ajuste-inventario/ajuste-inventario.routes').then(
+            (m) => m.AJUSTE_INVENTARIO_ROUTES,
+          ),
+      },
+      {
+        path: 'stock',
+        loadChildren: () => import('./features/stock/stock.routes').then((m) => m.STOCK_ROUTES),
+      },
+    ],
+  },
   { path: '**', redirectTo: 'inicio' },
-
 ];
