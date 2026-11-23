@@ -1,8 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LucideDownload, LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
+import { ActivatedRoute } from '@angular/router';
+import { LucideDownload, LucidePlus, LucideTrash } from '@lucide/angular';
 import { Sesion } from '@core/auth/sesion';
+import { Material } from '@shared/models/inventario';
+import { Catalogos } from '@shared/services/catalogos';
+import { BuscadorMateriales } from '@shared/components/buscador-materiales/buscador-materiales';
+import { EncabezadoFormulario } from '@shared/components/encabezado-formulario/encabezado-formulario';
+import { AccionesFormulario } from '@shared/components/acciones-formulario/acciones-formulario';
 import {
   claseCampo,
   claseCampoTabla,
@@ -12,11 +17,6 @@ import {
   irAlPrimerError,
 } from '@shared/utils/validaciones';
 
-interface Material {
-  codigo: string;
-  nombre: string;
-  unidad: string;
-}
 interface Linea {
   material: Material;
   sistema: number;
@@ -28,12 +28,12 @@ interface Linea {
   selector: 'app-nuevo-ajuste',
   imports: [
     FormsModule,
-    RouterLink,
     LucideDownload,
     LucidePlus,
-    LucideSearch,
     LucideTrash,
-    LucideX,
+    BuscadorMateriales,
+    EncabezadoFormulario,
+    AccionesFormulario,
   ],
   templateUrl: './nuevo-ajuste.html',
   styleUrl: './nuevo-ajuste.css',
@@ -41,25 +41,13 @@ interface Linea {
 export class NuevoAjuste {
   private route = inject(ActivatedRoute);
   private sesion = inject(Sesion);
+  private catalogos = inject(Catalogos);
 
-  // Catálogos de ejemplo (luego vendrán de la base de datos)
-  almacenes = ['Almacén Central', 'Almacén Campo', 'Almacén Vichama'];
-  tipoGeneral = 'Inventario general trimestral';
-  tipos = ['Regularización por diferencia física', 'Carga de stock inicial', this.tipoGeneral];
-  materiales: Material[] = [
-    { codigo: 'MAT-001', nombre: 'Cemento Portland Tipo I', unidad: 'bls' },
-    { codigo: 'MAT-002', nombre: 'Brocha de cerda 2"', unidad: 'und' },
-    { codigo: 'MAT-003', nombre: 'Bolsa polietileno 10x15', unidad: 'und' },
-    { codigo: 'MAT-004', nombre: 'Tubo PVC SAP 1/2"', unidad: 'und' },
-    { codigo: 'MAT-005', nombre: 'Pintura látex blanco 4L', unidad: 'gal' },
-  ];
-
-  // Stock de ejemplo por almacén (luego se calculará con los movimientos)
-  stock: Record<string, Record<string, number>> = {
-    'Almacén Central': { 'MAT-001': 45, 'MAT-002': 12, 'MAT-003': 15, 'MAT-004': 30, 'MAT-005': 8 },
-    'Almacén Campo': { 'MAT-001': 10, 'MAT-002': 2, 'MAT-005': 5 },
-    'Almacén Vichama': { 'MAT-003': 25, 'MAT-004': 6 },
-  };
+  // Catálogos (vienen del servicio)
+  almacenes = this.catalogos.almacenes;
+  tipos = this.catalogos.tiposAjuste;
+  tipoGeneral = this.catalogos.tipoAjusteGeneral;
+  materiales = this.catalogos.materiales;
 
   // Datos del ajuste (la fecha empieza vacía). Desde "Conteo general trimestral" el tipo ya viene elegido.
   fecha = '';
@@ -70,9 +58,9 @@ export class NuevoAjuste {
 
   almacen = signal('');
   lineas = signal<Linea[]>([]);
+  seleccionados = computed(() => this.lineas().map((l) => l.material.codigo));
   filtro = signal('');
   modalAbierto = signal(false);
-  busqueda = signal('');
 
   intentado = signal(false);
   error = signal('');
@@ -90,6 +78,14 @@ export class NuevoAjuste {
     return this.tipo === this.tipoGeneral;
   }
 
+  sistemaEn(codigo: string): number {
+    return this.catalogos.stockEn(this.almacen(), codigo);
+  }
+
+  // Texto gris del buscador: muestra el stock del sistema
+  detalleSistema = (m: Material) =>
+    `${m.codigo} · Stock sistema: ${this.sistemaEn(m.codigo)} ${m.unidad}`;
+
   cambiarAlmacen(valor: string) {
     this.almacen.set(valor);
     this.lineas.set([]); // el stock del sistema cambia, así que se vacía la tabla
@@ -99,10 +95,6 @@ export class NuevoAjuste {
   cambiarTipo(valor: string) {
     this.tipo = valor;
     if (this.esGeneral() && this.almacen() && this.lineas().length === 0) this.cargarTodos();
-  }
-
-  sistemaEn(codigo: string): number {
-    return this.stock[this.almacen()]?.[codigo] ?? 0;
   }
 
   // ---------- Validaciones ----------
@@ -166,7 +158,7 @@ export class NuevoAjuste {
     this.documento = el.value;
   }
 
-  // ---------- Tabla y buscador ----------
+  // ---------- Tabla y materiales ----------
   lineasVisibles = computed(() => {
     const texto = this.filtro().toLowerCase().trim();
     return this.lineas().filter(
@@ -176,19 +168,7 @@ export class NuevoAjuste {
     );
   });
 
-  // Incluye materiales con stock 0, para poder cargar el stock inicial
-  resultados = computed(() => {
-    const texto = this.busqueda().toLowerCase().trim();
-    return this.materiales.filter(
-      (m) => m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
-    );
-  });
-
-  yaAgregado(m: Material) {
-    return this.lineas().some((l) => l.material.codigo === m.codigo);
-  }
   abrirBuscador() {
-    this.busqueda.set('');
     this.modalAbierto.set(true);
   }
   cerrarBuscador() {
@@ -202,12 +182,12 @@ export class NuevoAjuste {
   }
 
   agregar(m: Material) {
-    if (this.yaAgregado(m)) return;
+    if (this.seleccionados().includes(m.codigo)) return;
     this.lineas.update((l) => [...l, this.nuevaLinea(m)]);
   }
 
   cargarTodos() {
-    const usados = this.lineas().map((l) => l.material.codigo);
+    const usados = this.seleccionados();
     const nuevas = this.materiales
       .filter((m) => !usados.includes(m.codigo))
       .map((m) => this.nuevaLinea(m));
@@ -289,10 +269,9 @@ export class NuevoAjuste {
     this.almacen.set('');
     this.lineas.set([]);
     this.filtro.set('');
-    this.busqueda.set('');
     this.intentado.set(false);
     this.error.set('');
     this.guardado.set(false);
-    irAId('titulo-ajuste', 'start');
+    irAId('titulo-formulario', 'start');
   }
 }

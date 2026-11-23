@@ -1,8 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
+import { LucidePlus, LucideTrash } from '@lucide/angular';
 import { Sesion } from '@core/auth/sesion';
+import { Material } from '@shared/models/inventario';
+import { Catalogos } from '@shared/services/catalogos';
+import { BuscadorMateriales } from '@shared/components/buscador-materiales/buscador-materiales';
+import { EncabezadoFormulario } from '@shared/components/encabezado-formulario/encabezado-formulario';
+import { AccionesFormulario } from '@shared/components/acciones-formulario/acciones-formulario';
 import {
   claseCampo,
   claseCampoTabla,
@@ -14,11 +18,6 @@ import {
   limpiarNumero,
 } from '@shared/utils/validaciones';
 
-interface Material {
-  codigo: string;
-  nombre: string;
-  unidad: string;
-}
 interface Linea {
   material: Material;
   stock: number;
@@ -27,31 +26,26 @@ interface Linea {
 
 @Component({
   selector: 'app-nueva-transferencia',
-  imports: [FormsModule, RouterLink, LucidePlus, LucideSearch, LucideTrash, LucideX],
+  imports: [
+    FormsModule,
+    LucidePlus,
+    LucideTrash,
+    BuscadorMateriales,
+    EncabezadoFormulario,
+    AccionesFormulario,
+  ],
   templateUrl: './nueva-transferencia.html',
   styleUrl: './nueva-transferencia.css',
 })
 export class NuevaTransferencia {
   private sesion = inject(Sesion);
+  private catalogos = inject(Catalogos);
 
-  // Catálogos de ejemplo (luego vendrán de la base de datos)
-  almacenes = ['Almacén Central', 'Almacén Campo', 'Almacén Vichama'];
-  motivos = ['Abastecimiento de obra / sede', 'Reubicación', 'Devolución a almacén central'];
-  tiposDocumento = ['Guía de remisión', 'Guía interna', 'Acta de entrega'];
-  materiales: Material[] = [
-    { codigo: 'MAT-001', nombre: 'Cemento Portland Tipo I', unidad: 'bls' },
-    { codigo: 'MAT-002', nombre: 'Brocha de cerda 2"', unidad: 'und' },
-    { codigo: 'MAT-003', nombre: 'Bolsa polietileno 10x15', unidad: 'und' },
-    { codigo: 'MAT-004', nombre: 'Tubo PVC SAP 1/2"', unidad: 'und' },
-    { codigo: 'MAT-005', nombre: 'Pintura látex blanco 4L', unidad: 'gal' },
-  ];
-
-  // Stock de ejemplo por almacén (luego se calculará con los movimientos)
-  stock: Record<string, Record<string, number>> = {
-    'Almacén Central': { 'MAT-001': 40, 'MAT-002': 12, 'MAT-003': 15, 'MAT-004': 30, 'MAT-005': 8 },
-    'Almacén Campo': { 'MAT-001': 10, 'MAT-002': 2, 'MAT-005': 5 },
-    'Almacén Vichama': { 'MAT-003': 25, 'MAT-004': 6 },
-  };
+  // Catálogos (vienen del servicio)
+  almacenes = this.catalogos.almacenes;
+  motivos = this.catalogos.motivosTransferencia;
+  tiposDocumento = this.catalogos.tiposDocumentoTransferencia;
+  materiales = this.catalogos.materiales;
 
   // Datos de la transferencia (la fecha empieza vacía)
   fecha = '';
@@ -63,8 +57,8 @@ export class NuevaTransferencia {
 
   origen = signal('');
   lineas = signal<Linea[]>([]);
+  seleccionados = computed(() => this.lineas().map((l) => l.material.codigo));
   modalAbierto = signal(false);
-  busqueda = signal('');
 
   intentado = signal(false);
   error = signal('');
@@ -77,6 +71,16 @@ export class NuevaTransferencia {
   get hoy() {
     return hoyISO();
   }
+
+  stockEn(codigo: string): number {
+    return this.catalogos.stockEn(this.origen(), codigo);
+  }
+
+  // Solo materiales con stock en el origen
+  disponibles = computed(() => this.materiales.filter((m) => this.stockEn(m.codigo) > 0));
+
+  // Texto gris del buscador: muestra el stock en el origen
+  detalleStock = (m: Material) => `${m.codigo} · Stock: ${this.stockEn(m.codigo)} ${m.unidad}`;
 
   cambiarOrigen(valor: string) {
     this.origen.set(valor);
@@ -139,27 +143,8 @@ export class NuevaTransferencia {
     this.numeroDocumento = limpiarNumero(ev);
   }
 
-  // ---------- Buscador de materiales ----------
-  stockEn(codigo: string): number {
-    return this.stock[this.origen()]?.[codigo] ?? 0;
-  }
-
-  // Solo materiales con stock en el origen
-  resultados = computed(() => {
-    const texto = this.busqueda().toLowerCase().trim();
-    const stockOrigen = this.stock[this.origen()] ?? {};
-    return this.materiales.filter(
-      (m) =>
-        (stockOrigen[m.codigo] ?? 0) > 0 &&
-        (m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto)),
-    );
-  });
-
-  yaAgregado(m: Material) {
-    return this.lineas().some((l) => l.material.codigo === m.codigo);
-  }
+  // ---------- Materiales ----------
   abrirBuscador() {
-    this.busqueda.set('');
     this.modalAbierto.set(true);
   }
   cerrarBuscador() {
@@ -167,7 +152,7 @@ export class NuevaTransferencia {
   }
 
   agregar(m: Material) {
-    if (this.yaAgregado(m)) return;
+    if (this.seleccionados().includes(m.codigo)) return;
     this.lineas.update((l) => [
       ...l,
       { material: m, stock: this.stockEn(m.codigo), cantidad: null },
@@ -217,10 +202,9 @@ export class NuevaTransferencia {
     this.observaciones = '';
     this.origen.set('');
     this.lineas.set([]);
-    this.busqueda.set('');
     this.intentado.set(false);
     this.error.set('');
     this.guardado.set(false);
-    irAId('titulo-transferencia', 'start');
+    irAId('titulo-formulario', 'start');
   }
 }

@@ -1,8 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { LucidePlus, LucideSearch, LucideTrash, LucideX } from '@lucide/angular';
+import { LucidePlus, LucideTrash } from '@lucide/angular';
 import { Sesion } from '@core/auth/sesion';
+import { Material } from '@shared/models/inventario';
+import { Catalogos } from '@shared/services/catalogos';
+import { BuscadorMateriales } from '@shared/components/buscador-materiales/buscador-materiales';
+import { EncabezadoFormulario } from '@shared/components/encabezado-formulario/encabezado-formulario';
+import { AccionesFormulario } from '@shared/components/acciones-formulario/acciones-formulario';
 import {
   claseCampo,
   claseCampoTabla,
@@ -16,11 +20,6 @@ import {
   limpiarSerie,
 } from '@shared/utils/validaciones';
 
-interface Material {
-  codigo: string;
-  nombre: string;
-  unidad: string;
-}
 interface Linea {
   material: Material;
   almacen: string;
@@ -29,26 +28,28 @@ interface Linea {
 
 @Component({
   selector: 'app-nueva-salida',
-  imports: [FormsModule, RouterLink, LucidePlus, LucideSearch, LucideTrash, LucideX],
+  imports: [
+    FormsModule,
+    LucidePlus,
+    LucideTrash,
+    BuscadorMateriales,
+    EncabezadoFormulario,
+    AccionesFormulario,
+  ],
   templateUrl: './nueva-salida.html',
   styleUrl: './nueva-salida.css',
 })
 export class NuevaSalida {
   private sesion = inject(Sesion);
+  private catalogos = inject(Catalogos);
 
-  // Catálogos de ejemplo (luego vendrán de la base de datos)
-  motivos = ['Consumo', 'Entrega a personal o área', 'Baja o merma', 'Donación'];
-  tiposDocumento = ['Requerimiento', 'Guía de remisión', 'Acta de entrega', 'Vale de salida'];
-  areas = ['Conservación', 'Mantenimiento', 'Administración'];
-  receptores = ['Luis Rojas', 'María Quispe', 'Carlos Vega'];
-  almacenes = ['Almacén Central', 'Almacén Campo', 'Almacén Vichama'];
-  materiales: Material[] = [
-    { codigo: 'MAT-001', nombre: 'Cemento Portland Tipo I', unidad: 'bls' },
-    { codigo: 'MAT-002', nombre: 'Brocha de cerda 2"', unidad: 'und' },
-    { codigo: 'MAT-003', nombre: 'Bolsa polietileno 10x15', unidad: 'und' },
-    { codigo: 'MAT-004', nombre: 'Tubo PVC SAP 1/2"', unidad: 'und' },
-    { codigo: 'MAT-005', nombre: 'Pintura látex blanco 4L', unidad: 'gal' },
-  ];
+  // Catálogos (vienen del servicio)
+  motivos = this.catalogos.motivosSalida;
+  tiposDocumento = this.catalogos.tiposDocumentoSalida;
+  areas = this.catalogos.areas;
+  receptores = this.catalogos.receptores;
+  almacenes = this.catalogos.almacenes;
+  materiales = this.catalogos.materiales;
 
   // Datos de la salida (la fecha empieza vacía)
   fecha = '';
@@ -61,8 +62,8 @@ export class NuevaSalida {
   observaciones = '';
 
   lineas = signal<Linea[]>([]);
+  seleccionados = computed(() => this.lineas().map((l) => l.material.codigo));
   modalAbierto = signal(false);
-  busqueda = signal('');
 
   intentado = signal(false);
   error = signal('');
@@ -125,19 +126,8 @@ export class NuevaSalida {
     this.numeroDocumento = limpiarNumero(ev);
   }
 
-  // ---------- Buscador de materiales ----------
-  resultados = computed(() => {
-    const texto = this.busqueda().toLowerCase().trim();
-    return this.materiales.filter(
-      (m) => m.codigo.toLowerCase().includes(texto) || m.nombre.toLowerCase().includes(texto),
-    );
-  });
-
-  yaAgregado(m: Material) {
-    return this.lineas().some((l) => l.material.codigo === m.codigo);
-  }
+  // ---------- Materiales ----------
   abrirBuscador() {
-    this.busqueda.set('');
     this.modalAbierto.set(true);
   }
   cerrarBuscador() {
@@ -145,7 +135,7 @@ export class NuevaSalida {
   }
 
   agregar(m: Material) {
-    if (this.yaAgregado(m)) return;
+    if (this.seleccionados().includes(m.codigo)) return;
     this.lineas.update((l) => [...l, { material: m, almacen: '', cantidad: null }]);
   }
 
@@ -194,10 +184,9 @@ export class NuevaSalida {
     this.receptor = '';
     this.observaciones = '';
     this.lineas.set([]);
-    this.busqueda.set('');
     this.intentado.set(false);
     this.error.set('');
     this.guardado.set(false);
-    irAId('titulo-salida', 'start');
+    irAId('titulo-formulario', 'start');
   }
 }
