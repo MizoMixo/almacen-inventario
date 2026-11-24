@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucidePlus } from '@lucide/angular';
+import { Operacion } from '@shared/models/inventario';
+import { Operaciones } from '@shared/services/operaciones';
+import { FilaOperacion } from '@shared/components/fila-operacion/fila-operacion';
+import { DetalleOperacion } from '@shared/components/detalle-operacion/detalle-operacion';
 
 @Component({
   selector: 'app-salidas',
-  imports: [RouterLink, LucidePlus],
+  imports: [RouterLink, FilaOperacion, DetalleOperacion],
   templateUrl: './salidas.html',
   styleUrl: './salidas.css',
 })
 export class Salidas {
-  salidas = [
-    { numero: 231, fecha: '2026-11-02', almacen: 'Almacén Campo', materiales: 3, documento: 'Req. N.º 089' },
-    { numero: 230, fecha: '2026-11-02', almacen: 'Almacén Central', materiales: 2, documento: 'Req. N.º 088' },
-    { numero: 229, fecha: '2026-11-01', almacen: 'Almacén Central', materiales: 1, documento: '' },
-  ];
+  salidas = inject(Operaciones).porTipo('SALIDA').slice(0, 10);
+  seleccionada = signal<Operacion | null>(null);
 }

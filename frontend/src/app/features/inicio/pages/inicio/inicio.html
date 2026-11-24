@@ -56,28 +56,30 @@
       </a>
     </div>
 
-    @for (m of movimientos; track m.numero) {
+    @for (o of ultimos; track o.tipo + o.id) {
+      @let n = materiales(o);
       <div
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0"
       >
         <div class="flex items-center gap-4">
-          <span [class]="'w-1.5 h-10 rounded shrink-0 ' + m.color"></span>
+          <span [class]="'w-1.5 h-10 rounded shrink-0 ' + barra[o.tipo]"></span>
           <div>
             <p class="text-sm">
-              <span class="font-semibold">{{ m.tipo }} N.º {{ m.numero }}</span>
-              · {{ m.fecha }} · {{ m.documento }}
+              <span class="font-semibold">{{ titulo(o) }}</span>
+              · {{ o.fecha }}{{ o.documento ? ' · ' + o.documento : '' }}
             </p>
             <p class="mt-1 text-xs text-slate-500 flex items-center gap-2">
               <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">{{
-                m.almacen
+                almacen(o)
               }}</span>
               <span>•</span>
-              <span>{{ m.materiales }} {{ m.materiales === 1 ? 'material' : 'materiales' }}</span>
+              <span>{{ n }} {{ n === 1 ? 'material' : 'materiales' }}</span>
             </p>
           </div>
         </div>
         <button
           type="button"
+          (click)="seleccionada.set(o)"
           class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-sm rounded px-4 py-2"
         >
           Ver detalle
@@ -112,3 +114,7 @@
     }
   </section>
 </div>
+
+@if (seleccionada(); as op) {
+  <app-detalle-operacion [operacion]="op" (cerrar)="seleccionada.set(null)" />
+}

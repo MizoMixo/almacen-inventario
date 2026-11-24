@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   LucidePackage,
@@ -6,11 +6,16 @@ import {
   LucideTriangleExclamationPoint,
   LucideArrowLeftRight,
 } from '@lucide/angular';
+import { Operacion } from '@shared/models/inventario';
+import { Operaciones } from '@shared/services/operaciones';
+import { DetalleOperacion } from '@shared/components/detalle-operacion/detalle-operacion';
+import { COLOR_BARRA, cantidadMateriales, resumenAlmacen, titulo } from '@shared/utils/operaciones';
 
 @Component({
   selector: 'app-inicio',
   imports: [
     RouterLink,
+    DetalleOperacion,
     LucidePackage,
     LucideWarehouse,
     LucideTriangleExclamationPoint,
@@ -20,49 +25,30 @@ import {
   styleUrl: './inicio.css',
 })
 export class Inicio {
+  private operaciones = inject(Operaciones);
+
+  // Últimas operaciones y detalle de la seleccionada
+  ultimos = this.operaciones.ultimas(5);
+  seleccionada = signal<Operacion | null>(null);
+
+  barra = COLOR_BARRA;
+  titulo = titulo;
+  almacen = resumenAlmacen;
+  materiales = cantidadMateriales;
+
+  // Resumen del mes actual, calculado con las operaciones
+  resumenMes = this.calcularMes();
+
+  private calcularMes() {
+    const mes = new Date().toLocaleDateString('en-CA').slice(0, 7); // ej. 2026-11
+    const delMes = this.operaciones.todas().filter((o) => o.fecha.startsWith(mes));
+    const ingresos = delMes.filter((o) => o.tipo === 'INGRESO').length;
+    const salidas = delMes.filter((o) => o.tipo === 'SALIDA').length;
+    return { total: delMes.length, ingresos, salidas, otros: delMes.length - ingresos - salidas };
+  }
+
   // Resalta la sección de stock crítico por un instante
   resaltado = signal(false);
-
-  resumenMes = { total: 34, ingresos: 18, salidas: 14, otros: 2 };
-
-  movimientos = [
-    {
-      tipo: 'Ingreso',
-      numero: 135,
-      fecha: '2026-11-02',
-      documento: 'Factura 000125',
-      almacen: 'Almacén Central',
-      materiales: 5,
-      color: 'bg-green-500',
-    },
-    {
-      tipo: 'Salida',
-      numero: 231,
-      fecha: '2026-11-02',
-      documento: 'Req. N.º 089',
-      almacen: 'Almacén Campo',
-      materiales: 3,
-      color: 'bg-red-500',
-    },
-    {
-      tipo: 'Ingreso',
-      numero: 134,
-      fecha: '2026-11-02',
-      documento: 'GRR 001-0452',
-      almacen: 'Almacén Central',
-      materiales: 2,
-      color: 'bg-green-500',
-    },
-    {
-      tipo: 'Transferencia',
-      numero: 34,
-      fecha: '2026-11-02',
-      documento: 'Guía Int. 018',
-      almacen: 'Central → Vichama',
-      materiales: 1,
-      color: 'bg-yellow-400',
-    },
-  ];
 
   stockCritico = [
     {

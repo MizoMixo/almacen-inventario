@@ -1,16 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideBoxes, LucideClipboardList, LucidePlus } from '@lucide/angular';
+import { Operacion } from '@shared/models/inventario';
+import { Operaciones } from '@shared/services/operaciones';
+import { FilaOperacion } from '@shared/components/fila-operacion/fila-operacion';
+import { DetalleOperacion } from '@shared/components/detalle-operacion/detalle-operacion';
 
 @Component({
   selector: 'app-ajuste-inventario',
-  imports: [RouterLink, LucideBoxes, LucideClipboardList, LucidePlus],
+  imports: [
+    RouterLink,
+    LucideBoxes,
+    LucideClipboardList,
+    LucidePlus,
+    FilaOperacion,
+    DetalleOperacion,
+  ],
   templateUrl: './ajuste-inventario.html',
   styleUrl: './ajuste-inventario.css',
 })
 export class AjusteInventario {
-  ajustes = [
-    { numero: 12, fecha: '2026-11-15', almacen: 'Almacén Central', tipo: 'Regularización por diferencia física', materiales: 1, documento: 'ACTA-014' },
-    { numero: 11, fecha: '2026-10-01', almacen: 'Almacén Campo', tipo: 'Inventario general trimestral', materiales: 3, documento: 'INV-Q3-2026' },
-  ];
+  ajustes = inject(Operaciones).porTipo('AJUSTE').slice(0, 10);
+  seleccionada = signal<Operacion | null>(null);
 }

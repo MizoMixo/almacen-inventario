@@ -1,33 +1,23 @@
 <h1 class="text-2xl font-bold text-[#16304f]">Registrar ingresos</h1>
 <p class="text-sm text-slate-600">Comienza una nueva recepción de materiales.</p>
 
-<a routerLink="/entradas/nuevo"
-   class="inline-flex items-center gap-2 mt-4 mb-4 bg-[#446c96] hover:bg-[#3a5f86] text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow">
-    <svg lucidePlus [size]="16"> </svg>
+<a
+  routerLink="/entradas/nuevo"
+  class="inline-block mt-4 mb-4 bg-[#446c96] hover:bg-[#3a5f86] text-white text-xs font-semibold rounded-lg px-5 py-2.5 shadow"
+>
   Registrar ingreso
 </a>
 
 <section class="bg-white rounded-2xl shadow-md p-6">
   <h2 class="text-xl font-bold mb-4">Últimos ingresos</h2>
 
-  @for (i of ingresos; track i.numero) {
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 py-3 last:border-0">
-      <div class="flex items-center gap-4">
-        <span class="w-1.5 h-8 rounded bg-green-500 shrink-0"></span>
-        <p class="text-sm">
-          <span class="font-semibold">Ingreso N.º {{ i.numero }}</span>
-          · {{ i.fecha }} · {{ i.almacen }}
-          <span class="text-xs text-slate-500">
-            ({{ i.materiales }} {{ i.materiales === 1 ? 'ítem' : 'ítems' }}{{ i.documento ? ' · ' + i.documento : '' }})
-          </span>
-        </p>
-      </div>
-      <button type="button"
-              class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2">
-        Ver detalle
-      </button>
-    </div>
+  @for (o of ingresos; track o.id) {
+    <app-fila-operacion [operacion]="o" (detalle)="seleccionada.set($event)" />
   } @empty {
     <p class="text-sm text-slate-500">Todavía no hay ingresos registrados.</p>
   }
 </section>
+
+@if (seleccionada(); as op) {
+  <app-detalle-operacion [operacion]="op" (cerrar)="seleccionada.set(null)" />
+}

@@ -1,0 +1,28 @@
+@let o = operacion();
+
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3">
+  <div class="flex items-center gap-4">
+    <span [class]="'w-1.5 h-8 rounded shrink-0 ' + barra[o.tipo]"></span>
+    <p class="text-sm flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span class="font-semibold">{{ titulo(o) }}</span>
+      <span>· {{ o.fecha }} · {{ almacen(o) }}</span>
+      @if (o.tipo === 'AJUSTE') {
+        <span
+          class="text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-0.5"
+          >{{ o.motivo }}</span
+        >
+      }
+      <span class="text-xs text-slate-500"
+        >({{ items(o) }}{{ o.documento ? ' · ' + o.documento : '' }})</span
+      >
+    </p>
+  </div>
+
+  <button
+    type="button"
+    (click)="detalle.emit(o)"
+    class="self-end sm:self-center bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2"
+  >
+    Ver detalle
+  </button>
+</div>

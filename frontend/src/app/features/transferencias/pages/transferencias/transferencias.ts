@@ -1,17 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideArrowLeftRight, LucideBoxes } from '@lucide/angular';
+import { Operacion } from '@shared/models/inventario';
+import { Operaciones } from '@shared/services/operaciones';
+import { FilaOperacion } from '@shared/components/fila-operacion/fila-operacion';
+import { DetalleOperacion } from '@shared/components/detalle-operacion/detalle-operacion';
 
 @Component({
   selector: 'app-transferencias',
-  imports: [RouterLink, LucideArrowLeftRight, LucideBoxes],
+  imports: [RouterLink, LucideArrowLeftRight, LucideBoxes, FilaOperacion, DetalleOperacion],
   templateUrl: './transferencias.html',
   styleUrl: './transferencias.css',
 })
 export class Transferencias {
-  transferencias = [
-    { numero: 34, fecha: '2026-11-18', origen: 'Almacén Central', destino: 'Almacén Vichama', materiales: 2, documento: 'Guía Int. 018' },
-    { numero: 33, fecha: '2026-11-14', origen: 'Almacén Central', destino: 'Almacén Campo', materiales: 2, documento: 'Acta Entrega 009' },
-    { numero: 32, fecha: '2026-11-09', origen: 'Almacén Campo', destino: 'Almacén Central', materiales: 1, documento: '' },
-  ];
+  transferencias = inject(Operaciones).porTipo('TRANSFERENCIA').slice(0, 10);
+  seleccionada = signal<Operacion | null>(null);
 }

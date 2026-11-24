@@ -8,6 +8,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       {
+        path: 'historial',
+        loadChildren: () =>
+          import('./features/historial/historial.routes').then((m) => m.HISTORIAL_ROUTES),
+      },
+      {
         path: 'inicio',
         loadChildren: () => import('./features/inicio/inicio.routes').then((m) => m.INICIO_ROUTES),
       },

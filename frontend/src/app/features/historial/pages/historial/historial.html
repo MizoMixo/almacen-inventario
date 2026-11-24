@@ -1,0 +1,159 @@
+<h1 class="text-2xl font-bold text-[#16304f]">Historial de operaciones</h1>
+<p class="text-sm text-slate-600 mb-4">
+  Consulta los ingresos, salidas, transferencias y ajustes registrados.
+</p>
+
+<!-- Filtros -->
+<section class="bg-white rounded-2xl shadow-md p-5 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="md:col-span-4">
+      <label class="block text-xs font-semibold mb-1">Buscar</label>
+      <div class="relative">
+        <svg
+          lucideSearch
+          [size]="16"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)"
+          placeholder="N.º, documento, motivo o usuario..."
+          class="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm"
+        />
+      </div>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold mb-1">Tipo</label>
+      <select
+        [ngModel]="tipo()"
+        (ngModelChange)="tipo.set($event)"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+      >
+        <option value="">Todos los tipos</option>
+        @for (t of tipos; track t.valor) {
+          <option [value]="t.valor">{{ t.texto }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold mb-1">Almacén</label>
+      <select
+        [ngModel]="almacen()"
+        (ngModelChange)="almacen.set($event)"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+      >
+        <option value="">Todos</option>
+        @for (a of almacenes; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold mb-1">Desde</label>
+      <input
+        type="date"
+        [ngModel]="desde()"
+        (ngModelChange)="desde.set($event)"
+        [class]="
+          'w-full rounded-lg border px-3 py-2 text-sm ' +
+          (rangoInvalido() ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-white')
+        "
+      />
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold mb-1">Hasta</label>
+      <input
+        type="date"
+        [ngModel]="hasta()"
+        (ngModelChange)="hasta.set($event)"
+        [class]="
+          'w-full rounded-lg border px-3 py-2 text-sm ' +
+          (rangoInvalido() ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-white')
+        "
+      />
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between mt-4">
+    <p class="text-xs text-red-600">
+      @if (rangoInvalido()) {
+        La fecha inicial no puede ser posterior a la final.
+      }
+    </p>
+    <button
+      type="button"
+      (click)="limpiarFiltros()"
+      class="rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-sm font-semibold"
+    >
+      Limpiar filtros
+    </button>
+  </div>
+</section>
+
+<!-- Tabla -->
+<section class="bg-white rounded-2xl shadow-md p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-bold text-[#16304f]">Operaciones registradas</h2>
+    <span class="text-sm text-slate-500">
+      Mostrando {{ filas().length }} {{ filas().length === 1 ? 'operación' : 'operaciones' }}
+    </span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-100 text-xs uppercase text-slate-500">
+        <tr>
+          <th class="py-3 px-3 font-semibold">Operación</th>
+          <th class="py-3 px-3 font-semibold">Fecha</th>
+          <th class="py-3 px-3 font-semibold">Almacén</th>
+          <th class="py-3 px-3 font-semibold">Documento</th>
+          <th class="py-3 px-3 font-semibold">Materiales</th>
+          <th class="py-3 px-3 font-semibold">Registrado por</th>
+          <th class="py-3 px-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (o of filas(); track o.tipo + o.id) {
+          <tr class="border-b border-slate-200">
+            <td class="py-3 px-3">
+              <div class="flex items-center gap-3">
+                <span [class]="'w-1.5 h-8 rounded shrink-0 ' + barra[o.tipo]"></span>
+                <span class="font-semibold whitespace-nowrap">{{ titulo(o) }}</span>
+              </div>
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">{{ o.fecha }}</td>
+            <td class="py-3 px-3">{{ resumenAlmacen(o) }}</td>
+            <td class="py-3 px-3">{{ o.documento || '—' }}</td>
+            <td class="py-3 px-3">{{ items(o) }}</td>
+            <td class="py-3 px-3">{{ o.registradoPor }}</td>
+            <td class="py-3 px-3 text-right">
+              <button
+                type="button"
+                (click)="seleccionada.set(o)"
+                class="bg-slate-200 hover:bg-slate-300 text-xs font-semibold rounded-lg px-4 py-2"
+              >
+                Ver detalle
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="py-10 text-center text-slate-500">
+              <p>No se encontraron operaciones con esos filtros.</p>
+              <p class="text-xs">Prueba con «Limpiar filtros».</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (seleccionada(); as op) {
+  <app-detalle-operacion [operacion]="op" (cerrar)="seleccionada.set(null)" />
+}
