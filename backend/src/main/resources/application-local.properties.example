@@ -1,0 +1,3 @@
+spring.datasource.url=jdbc:postgresql://localhost:5432/almacen_inventario
+spring.datasource.username=almacen_app
+spring.datasource.password=CAMBIAR_POR_TU_CLAVE
