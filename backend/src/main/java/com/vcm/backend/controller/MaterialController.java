@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Tag(name = "Materiales", description = "Catálogo de materiales")
 @RestController
@@ -29,17 +30,20 @@ public class MaterialController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @ResponseStatus(HttpStatus.CREATED)
     public MaterialResponse crear(@Valid @RequestBody MaterialRequest request) {
         return service.crear(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public MaterialResponse actualizar(@PathVariable Long id, @Valid @RequestBody MaterialRequest request) {
         return service.actualizar(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desactivar(@PathVariable Long id) {
         service.desactivar(id);

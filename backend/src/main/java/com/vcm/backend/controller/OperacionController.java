@@ -12,7 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -51,6 +51,7 @@ public class OperacionController {
     }
 
     @PatchMapping("/{id}/anular")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public OperacionResponse anular(@PathVariable Long id) {
         return service.anular(id);
     }
