@@ -65,14 +65,15 @@
 
       <div class="flex items-center gap-4">
         <div class="text-right leading-tight">
-          <p class="font-semibold text-slate-800">{{ sesion.nombre }}</p>
-          <p class="text-xs text-slate-500">{{ sesion.rol }}</p>
+          <p class="font-semibold text-slate-800">{{ sesion.nombre() }}</p>
+          <p class="text-xs text-slate-500">{{ sesion.rolTexto() }}</p>
         </div>
 
         <div class="h-8 w-px bg-slate-300"></div>
 
         <button
           type="button"
+          (click)="salir()"
           class="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50"
         >
           <svg lucideLogOut [size]="22"></svg>

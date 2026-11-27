@@ -18,6 +18,7 @@ import {
   LucideSettings,
 } from '@lucide/angular';
 import { Sesion } from '@core/auth/sesion';
+import { Auth } from '@core/auth/auth';
 
 // INTERFACES PARA EL MENU LATERAL
 interface ItemMenu {
@@ -48,6 +49,17 @@ interface GrupoMenu {
 export class MainLayout {
   private router = inject(Router);
   sesion = inject(Sesion);
+  private auth = inject(Auth);
+
+  constructor() {
+    // Refresca los datos del usuario desde la API; si el token venció, el interceptor cierra la sesión
+    this.auth.perfil().subscribe({ error: () => {} });
+  }
+
+  salir() {
+    this.sesion.cerrar();
+    this.router.navigate(['/login']);
+  }
 
   // Menú desplegable en pantallas pequeñas
   menuAbierto = signal(false);

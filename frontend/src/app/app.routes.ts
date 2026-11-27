@@ -1,10 +1,16 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './core/layout/main-layout/main-layout';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('./features/login/pages/login/login').then((m) => m.Login),
+  },
+  {
     path: '',
     component: MainLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       {
