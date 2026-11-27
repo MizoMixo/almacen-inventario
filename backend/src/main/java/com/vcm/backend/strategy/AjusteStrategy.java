@@ -28,6 +28,9 @@ public class AjusteStrategy implements OperacionStrategy {
 
     @Override
     public void validar(OperacionRequest request) {
+        if (request.almacenId() == null) {
+            throw new ReglaNegocioException("El almacén es obligatorio en un ajuste");
+        }
         // En los ajustes, numeroDocumento guarda el acta (ej. ACTA-014)
         if (request.numeroDocumento() == null || request.numeroDocumento().isBlank()) {
             throw new ReglaNegocioException("El número de acta es obligatorio en un ajuste");

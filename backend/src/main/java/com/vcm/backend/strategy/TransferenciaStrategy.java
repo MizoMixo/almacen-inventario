@@ -28,6 +28,9 @@ public class TransferenciaStrategy implements OperacionStrategy {
 
     @Override
     public void validar(OperacionRequest request) {
+        if (request.almacenId() == null) {
+            throw new ReglaNegocioException("El almacén de origen es obligatorio en una transferencia");
+        }
         if (request.almacenDestinoId() == null) {
             throw new ReglaNegocioException("El almacén de destino es obligatorio en una transferencia");
         }

@@ -29,8 +29,7 @@ public record OperacionRequest(
         @Pattern(regexp = "^[A-Za-z0-9-]*$", message = "El número de documento solo admite letras, números y guion")
         String numeroDocumento,
 
-        @NotNull(message = "El almacén es obligatorio")
-        Long almacenId,
+        Long almacenId,   // almacén de la operación (transferencias y ajustes); en ingresos y salidas es el valor por defecto de cada ítem
 
         Long almacenDestinoId,   // solo para transferencias (se usará más adelante)
 
@@ -44,16 +43,18 @@ public record OperacionRequest(
         @Valid
         List<ItemRequest> items
 ) {
-    public record ItemRequest(
-            @NotNull(message = "El material es obligatorio")
-            Long materialId,
+        public record ItemRequest(
+                @NotNull(message = "El material es obligatorio")
+                Long materialId,
 
-            @NotNull(message = "La cantidad es obligatoria")
-            @DecimalMin(value = "0", message = "La cantidad no puede ser negativa")
-            BigDecimal cantidad,
+                Long almacenId,   // opcional: si no viene, se usa el almacén de la operación
 
-            @Size(max = 100, message = "La nota admite hasta 100 caracteres")
-            String nota
-    ) {
-    }
+                @NotNull(message = "La cantidad es obligatoria")
+                @DecimalMin(value = "0", message = "La cantidad no puede ser negativa")
+                BigDecimal cantidad,
+
+                @Size(max = 100, message = "La nota admite hasta 100 caracteres")
+                String nota
+        ) {
+        }
 }

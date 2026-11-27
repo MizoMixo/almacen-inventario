@@ -26,7 +26,7 @@ public class IngresoStrategy implements OperacionStrategy {
         return request.items().stream().map(item -> {
             Movimiento m = new Movimiento();
             m.setMaterial(contexto.materiales().get(item.materialId()));
-            m.setAlmacen(contexto.almacen());
+            m.setAlmacen(contexto.almacenDe(item));
             m.setTipo(TipoMovimiento.AUMENTO);
             m.setCantidad(item.cantidad());
             m.setNota(item.nota());

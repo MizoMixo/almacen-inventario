@@ -88,8 +88,13 @@ public class OperacionServiceImpl implements OperacionService {
                             "Tipo de documento no encontrado: " + r.tipoDocumentoId()));
         }
 
-        Almacen almacen = buscarAlmacen(r.almacenId());
-        Almacen destino = r.almacenDestinoId() == null ? null : buscarAlmacen(r.almacenDestinoId());
+        // Almacenes usados: el de la operación, el destino y el de cada ítem (cada uno se busca una sola vez)
+        Map<Long, Almacen> almacenes = new LinkedHashMap<>();
+        Almacen almacen = cargarAlmacen(r.almacenId(), almacenes);
+        Almacen destino = cargarAlmacen(r.almacenDestinoId(), almacenes);
+        for (OperacionRequest.ItemRequest item : r.items()) {
+            cargarAlmacen(item.almacenId(), almacenes);
+        }
 
         Area area = r.areaId() == null ? null : areaRepo.findById(r.areaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Área no encontrada: " + r.areaId()));
@@ -114,7 +119,7 @@ public class OperacionServiceImpl implements OperacionService {
         }
 
         List<Movimiento> movimientos = estrategia.generarMovimientos(
-                r, new ContextoOperacion(almacen, destino, materiales));
+                r, new ContextoOperacion(almacen, destino, materiales, almacenes));
 
         // Numeración propia por tipo: la fila se bloquea hasta que termine la transacción
         SecuenciaOperacion secuencia = secuenciaRepo.bloquearPorTipo(r.tipo())
@@ -202,6 +207,12 @@ public class OperacionServiceImpl implements OperacionService {
             throw new ReglaNegocioException("El almacén " + almacen.getNombre() + " está desactivado");
         }
         return almacen;
+    }
+    private Almacen cargarAlmacen(Long id, Map<Long, Almacen> cache) {
+        if (id == null) {
+            return null;
+        }
+        return cache.computeIfAbsent(id, this::buscarAlmacen);
     }
 
     // Quita espacios; si "mayusculas" es true también pasa a mayúsculas. Texto vacío = null

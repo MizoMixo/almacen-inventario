@@ -1,6 +1,7 @@
 package com.vcm.backend.strategy;
 
 import com.vcm.backend.dto.request.OperacionRequest;
+import com.vcm.backend.entity.Almacen;
 import com.vcm.backend.entity.Material;
 import com.vcm.backend.entity.Movimiento;
 import com.vcm.backend.enums.TipoMovimiento;
@@ -38,16 +39,17 @@ public class SalidaStrategy implements OperacionStrategy {
     public List<Movimiento> generarMovimientos(OperacionRequest request, ContextoOperacion contexto) {
         return request.items().stream().map(item -> {
             Material material = contexto.materiales().get(item.materialId());
-            BigDecimal disponible = movimientoRepo.stockDisponible(material.getId(), contexto.almacen().getId());
+            Almacen almacen = contexto.almacenDe(item);
+            BigDecimal disponible = movimientoRepo.stockDisponible(material.getId(), almacen.getId());
             if (item.cantidad().compareTo(disponible) > 0) {
                 throw new ReglaNegocioException("Stock insuficiente de " + material.getCodigo() + " - "
-                        + material.getNombre() + " en " + contexto.almacen().getNombre()
+                        + material.getNombre() + " en " + almacen.getNombre()
                         + ": disponible " + disponible.stripTrailingZeros().toPlainString()
                         + ", solicitado " + item.cantidad().stripTrailingZeros().toPlainString());
             }
             Movimiento m = new Movimiento();
             m.setMaterial(material);
-            m.setAlmacen(contexto.almacen());
+            m.setAlmacen(almacen);
             m.setTipo(TipoMovimiento.DISMINUCION);
             m.setCantidad(item.cantidad());
             m.setNota(item.nota());
