@@ -1,7 +1,10 @@
 package com.vcm.backend.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,10 +12,17 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI apiInfo() {
-        return new OpenAPI().info(new Info()
-                .title("API del Sistema de Gestión de Almacén e Inventario")
-                .version("1.0.0")
-                .description("Materiales, operaciones (ingresos, salidas, transferencias y ajustes) y stock"));
+    public OpenAPI openAPI() {
+        final String esquema = "bearerAuth";
+        return new OpenAPI()
+                .info(new Info()
+                        .title("API - Sistema Web de Gestión de Almacén e Inventario")
+                        .version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList(esquema))
+                .components(new Components().addSecuritySchemes(esquema,
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
     }
 }
